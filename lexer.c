@@ -477,17 +477,49 @@ struct token* token_make_special_number_hexadecimal()
     return token_make_number_for_value(number);
 }
 
+void lexer_validate_binary_string(const char* str)
+{
+    size_t len = strlen(str);
+    for (int i = 0; i < len; i++)
+    {
+       if (str[i] != '0' && str[i] != '1')
+       {
+           compiler_error(lex_process->compiler, "This is not a valid binary number\n");
+       }
+    }
+}
+
+struct token* token_make_special_number_binary()
+{
+    // Skip the "b"
+    nextc();
+
+    unsigned long number = 0;
+    const char* number_str = read_number_str();
+    lexer_validate_binary_string(number_str);
+    number = strtol(number_str, 0, 2);
+    return token_make_number_for_value(number);
+}
+
 struct token* token_make_special_number()
 {
     struct token* token = NULL;
     struct token* last_token = lexer_last_token();
-    
+    if (!last_token || !(last_token->type == TOKEN_TYPE_NUMBER && last_token->llnum == 0))
+    {
+        return token_make_identifier_or_keyword();
+    }
+
     lexer_pop_token();
 
     char c = peekc();
     if (c == 'x')
     {
         token = token_make_special_number_hexadecimal();
+    }
+    else if(c == 'b')
+    {
+        token = token_make_special_number_binary();
     }
 
     return token;
@@ -536,6 +568,7 @@ struct token *read_next_token()
         token = token_make_symbol();
         break;
     
+    case 'b':
     case 'x':
         token = token_make_special_number();
         break;
