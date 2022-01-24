@@ -501,6 +501,56 @@ void parser_ignore_int(struct datatype* dtype)
     token_next();
 }
 
+void parse_expressionable_root(struct history* history)
+{
+    parse_expressionable(history);
+    struct node* result_node = node_pop();
+    node_push(result_node);
+}
+
+void make_variable_node(struct datatype* dtype, struct token* name_token, struct node* value_node)
+{
+    const char* name_str = NULL;
+    if (name_token)
+    {
+        name_str = name_token->sval;
+    }
+
+    node_create(&(struct node){.type=NODE_TYPE_VARIABLE, .var.name=name_str, .var.type=*dtype, .var.val=value_node});
+}
+
+void make_variable_node_and_register(struct history* history, struct datatype* dtype, struct token* name_token, struct node* value_node)
+{   
+    make_variable_node(dtype, name_token, value_node);
+    struct node* var_node = node_pop();
+
+    #warning "Remember to calculate scope offsets and push to the scope"
+    // Calculate the scope offset
+    // Push the variable node to the scope
+    
+    node_push(var_node);
+}
+
+
+void parse_variable(struct datatype* dtype, struct token* name_token, struct history* history)
+{
+    struct node* value_node = NULL;
+    // int a; int b[30];
+    // Check for array brackets.
+    #warning "Don't forget to check for array brackets"
+
+    // int c = 50;
+    if (token_next_is_operator("="))
+    {
+        // Ignore the = operator
+        token_next();
+        parse_expressionable_root(history);
+        value_node = node_pop();
+    }
+
+    make_variable_node_and_register(history, dtype, name_token, value_node);
+}
+
 void parse_variable_function_or_struct_union(struct history* history)
 {
     struct datatype dtype;
@@ -509,6 +559,18 @@ void parse_variable_function_or_struct_union(struct history* history)
 
     // Ignore integer abbrevations if neccesary i.e "long int" becomes just "long"
     parser_ignore_int(&dtype);
+
+    // int abc;
+    struct token* name_token = token_next();
+    if (name_token->type != TOKEN_TYPE_IDENTIFIER)
+    {
+        compiler_error(current_process, "Expecting a valid name for the given variable declaration\n");
+    }
+
+   // int abc()
+    // Check if this is a function declaration
+
+    parse_variable(&dtype, name_token, history);
 }
 
 
@@ -567,7 +629,10 @@ void parse_keyword_for_global()
 {
     parse_keyword(history_begin(0));
     struct node* node = node_pop();
+
+    node_push(node);
 }
+
 int parse_next()
 {
     struct token *token = token_peek_next();
