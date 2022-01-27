@@ -318,6 +318,12 @@ struct node
             const char* name;
             struct node* val;   
         } var;
+
+        struct varlist
+        {
+            // A list of struct node* variables.
+            struct vector* list;
+        } var_list;
     }; 
     
     union 

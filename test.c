@@ -1,1 +1,1 @@
-int x = 50
+int x, e, d, ee, ii, oo, ooo = 50;
