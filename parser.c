@@ -73,6 +73,16 @@ static void expect_sym(char c)
     }
 }
 
+static void expect_op(const char* op)
+{
+    struct token* next_token = token_next();
+    if (!next_token || next_token->type != TOKEN_TYPE_OPERATOR || !S_EQ(next_token->sval, op))
+    {
+        compiler_error(current_process, "Expecting the operator %s but something else was provided\n", next_token->sval);
+    }
+}
+
+
 
 void parse_single_token_to_node()
 {
@@ -547,12 +557,45 @@ void make_variable_list_node(struct vector* var_list_vec)
     node_create(&(struct node){.type=NODE_TYPE_VARIABLE_LIST,.var_list.list=var_list_vec});
 }
 
+struct array_brackets* parse_array_brackets(struct history* history)
+{
+    struct array_brackets* brackets = array_brackets_new();
+    while(token_next_is_operator("["))
+    {
+        expect_op("["); 
+        if (token_is_symbol(token_peek_next(), ']'))
+        {
+            // Nothing between the brackets
+            expect_sym(']');
+            break;
+        }
+
+        parse_expressionable_root(history);
+        expect_sym(']');
+
+        struct node* exp_node = node_pop();
+        make_bracket_node(exp_node);
+
+        struct node* bracket_node = node_pop();
+        array_brackets_add(brackets, bracket_node);
+    }
+
+    return brackets;
+}
+
 void parse_variable(struct datatype* dtype, struct token* name_token, struct history* history)
 {
     struct node* value_node = NULL;
     // int a; int b[30];
     // Check for array brackets.
-    #warning "Don't forget to check for array brackets"
+    struct array_brackets* brackets = NULL;
+    if (token_next_is_operator("["))
+    {
+        brackets = parse_array_brackets(history);
+        dtype->array.brackets = brackets;
+        dtype->array.size = array_brackets_calculate_size(dtype, brackets);
+        dtype->flags |= DATATYPE_FLAG_IS_ARRAY;
+    }
 
     // int c = 50;
     if (token_next_is_operator("="))
