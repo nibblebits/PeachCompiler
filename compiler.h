@@ -347,7 +347,23 @@ struct node
             // int x[50]; [50] would be our bracket node. The inner would NODE_TYPE_NUMBER value of 50
             struct node* inner;
         } bracket;
-        
+
+        struct _struct
+        {
+            const char* name;
+            struct node* body_n;
+
+            /**
+             * struct abc
+             * {
+             * 
+             * } var_name;
+             * 
+             * NULL if no variable attached to structure.
+             * 
+             */
+            struct node* var;
+        } _struct;
     }; 
     
     union 
