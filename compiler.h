@@ -347,6 +347,7 @@ struct node
             // int x[50]; [50] would be our bracket node. The inner would NODE_TYPE_NUMBER value of 50
             struct node* inner;
         } bracket;
+        
     }; 
     
     union 
@@ -462,7 +463,22 @@ struct vector* array_brackets_node_vector(struct array_brackets* brackets);
 size_t array_brackets_calculate_size_from_index(struct datatype* dtype, struct array_brackets* brackets, int index);
 size_t array_brackets_calculate_size(struct datatype* dtype, struct array_brackets* brackets);
 int array_total_indexes(struct datatype* dtype);
+bool datatype_is_struct_or_union(struct datatype* dtype);
 
+
+struct scope* scope_new(struct compile_process* process, int flags);
+struct scope* scope_create_root(struct compile_process* process);
+void scope_free_root(struct compile_process* process);
+void scope_iteration_start(struct scope* scope);
+void scope_iteration_end(struct scope* scope);
+void* scope_iterate_back(struct scope* scope);
+void* scope_last_entity_at_scope(struct scope* scope);
+void* scope_last_entity_from_scope_stop_at(struct scope* scope, struct scope* stop_scope);
+void* scope_last_entity_stop_at(struct compile_process* process, struct scope* stop_scope);
+void* scope_last_entity(struct compile_process* process);
+void scope_push(struct compile_process* process, void* ptr, size_t elem_size);
+void scope_finish(struct compile_process* process);
+struct scope* scope_current(struct compile_process* process);
 #define TOTAL_OPERATOR_GROUPS 14
 #define MAX_OPERATORS_IN_GROUP 12
 
