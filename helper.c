@@ -22,6 +22,24 @@ size_t variable_size_for_list(struct node* var_list_node)
     return size;
 }
 
+struct node* variable_struct_or_union_body_node(struct node* node)
+{
+    if (!node_is_struct_or_union_variable(node))
+    {
+        return NULL;
+    }
+
+    if (node->var.type.type == DATA_TYPE_STRUCT)
+    {
+        return node->var.type.struct_node->_struct.body_n;
+    }
+
+    // return the union body.
+    #warning "Remember to implement unions"
+    printf("NO UNION NODES ARE YET IMPLEMENTED\n");
+    exit(1);
+}
+
 int padding(int val, int to)
 {
     if (to <= 0)
