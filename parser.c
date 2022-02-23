@@ -9,6 +9,11 @@ extern struct node* parser_current_body;
 
 extern struct expressionable_op_precedence_group op_precedence[TOTAL_OPERATOR_GROUPS];
 
+enum
+{
+    HISTORY_FLAG_INSIDE_UNION = 0b00000001,
+};
+
 struct history
 {
     int flags;
@@ -703,11 +708,27 @@ void parser_append_size_for_node(struct history* history, size_t* _variable_size
 
 }
 
-void parser_finalize_body(struct history* history, struct node* body_node, struct vector* body_vec, size_t* variable_size, struct node* largest_align_eligible_var_node, struct node* largest_possible_var_node)
+void parser_finalize_body(struct history* history, struct node* body_node, struct vector* body_vec, size_t* _variable_size, struct node* largest_align_eligible_var_node, struct node* largest_possible_var_node)
 {
+    if (history->flags & HISTORY_FLAG_INSIDE_UNION)
+    {
+        if (largest_possible_var_node)
+        {
+            *_variable_size = variable_size(largest_possible_var_node);
+        }
+    }
+    int padding = compute_sum_padding(body_vec);
+    *_variable_size += padding;
+
+    if (largest_align_eligible_var_node)
+    {
+        *_variable_size = align_value(*_variable_size, largest_align_eligible_var_node->var.type.size);
+    }
+
+    bool padded = padding != 0;
     body_node->body.largest_var_node = largest_align_eligible_var_node;
-    body_node->body.padded = false;
-    body_node->body.size = *variable_size;
+    body_node->body.padded = padded;
+    body_node->body.size = *_variable_size;
     body_node->body.statements = body_vec;
 }
 
