@@ -333,6 +333,8 @@ struct node
         {
             struct datatype type;
             int padding;
+            // Aligned offset
+            int aoffset;
             const char* name;
             struct node* val;   
         } var;
@@ -479,6 +481,8 @@ size_t datatype_size_for_array_access(struct datatype* dtype);
 size_t datatype_element_size(struct datatype* dtype);
 size_t datatype_size_no_ptr(struct datatype* dtype);
 size_t datatype_size(struct datatype* dtype);
+bool datatype_is_primitive(struct datatype* dtype);
+
 bool token_is_operator(struct token* token, const char* val);
 
 struct node* node_create(struct node* _node);
@@ -522,6 +526,8 @@ size_t variable_size(struct node* var_node);
  * @return size_t The sum of all variable node sizes in the list.
  */
 size_t variable_size_for_list(struct node* var_list_node);
+struct node* variable_node(struct node* node);
+bool variable_node_is_primitive(struct node* node);
 
 int padding(int val, int to);
 int align_value(int val, int to);
