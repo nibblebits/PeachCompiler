@@ -509,6 +509,8 @@ size_t array_brackets_calculate_size(struct datatype* dtype, struct array_bracke
 int array_total_indexes(struct datatype* dtype);
 bool datatype_is_struct_or_union(struct datatype* dtype);
 struct node* variable_struct_or_union_body_node(struct node* node);
+struct node* variable_node_or_list(struct node* node);
+
 
 
 /**

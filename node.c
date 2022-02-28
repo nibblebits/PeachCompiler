@@ -94,6 +94,7 @@ bool node_is_struct_or_union_variable(struct node* node)
 
 struct node* variable_node(struct node* node)
 {
+
     struct node* var_node = NULL;
     switch(node->type)
     {
@@ -118,4 +119,14 @@ bool variable_node_is_primitive(struct node* node)
 {
     assert(node->type == NODE_TYPE_VARIABLE);
     return datatype_is_primitive(&node->var.type);
+}
+
+struct node* variable_node_or_list(struct node* node)
+{
+    if (node->type == NODE_TYPE_VARIABLE_LIST)
+    {
+        return node;
+    }
+
+    return variable_node(node);
 }
