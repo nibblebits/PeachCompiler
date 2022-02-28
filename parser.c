@@ -90,9 +90,9 @@ struct parser_scope_entity* parser_scope_last_entity()
     return scope_last_entity(current_process);
 }
 
-void parser_scope_push(struct node* node, size_t size)
+void parser_scope_push(struct parser_scope_entity* entity, size_t size)
 {
-    scope_push(current_process, node, size);
+    scope_push(current_process, entity, size);
 }
 
 static void parser_ignore_nl_or_comment(struct token *token)
@@ -678,6 +678,7 @@ void make_variable_node_and_register(struct history* history, struct datatype* d
     // Calculate the scope offset
     parser_scope_offset(var_node, history);
     // Push the variable node to the scope
+    parser_scope_push(parser_new_scope_entity(var_node, var_node->var.aoffset, 0), var_node->var.type.size);
     
     node_push(var_node);
 }
