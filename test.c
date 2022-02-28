@@ -1,4 +1,1 @@
-int main()
-{
-    int x;    
-}
+int x = 50;
