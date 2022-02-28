@@ -47,7 +47,8 @@ enum
 {
     HISTORY_FLAG_INSIDE_UNION = 0b00000001,
     HISTORY_FLAG_IS_UPWARD_STACK = 0b00000010,
-    HISTORY_FLAG_IS_GLOBAL_SCOPE = 0b00000100
+    HISTORY_FLAG_IS_GLOBAL_SCOPE = 0b00000100,
+    HISTORY_FLAG_INSIDE_STRUCTURE = 0b00001000
 };
 
 struct history
@@ -82,6 +83,11 @@ void parser_scope_new()
 void parser_scope_finish()
 {
     scope_finish(current_process);
+}
+
+struct parser_scope_entity* parser_scope_last_entity()
+{
+    return scope_last_entity(current_process);
 }
 
 void parser_scope_push(struct node* node, size_t size)
@@ -625,9 +631,25 @@ void parser_scope_offset_for_stack(struct node* node, struct history* history)
     }
 }
 
-int parser_scope_offset_for_global(struct node* node, struct history* history)
+void parser_scope_offset_for_global(struct node* node, struct history* history)
 {
-    return 0;
+    
+}
+
+void parser_scope_offset_for_structure(struct node* node, struct history* history)
+{
+    int offset = 0;
+    struct parser_scope_entity* last_entity = parser_scope_last_entity();
+    if (last_entity)
+    {
+        offset += last_entity->stack_offset + last_entity->node->var.type.size;
+        if (variable_node_is_primitive(node))
+        {
+            node->var.padding = padding(offset, node->var.type.size);
+        }
+
+        node->var.aoffset = offset + node->var.padding;
+    }
 }
 
 void parser_scope_offset(struct node* node, struct history* history)
@@ -635,6 +657,12 @@ void parser_scope_offset(struct node* node, struct history* history)
     if (history->flags & HISTORY_FLAG_IS_GLOBAL_SCOPE)
     {
         parser_scope_offset_for_global(node, history);
+        return;
+    }
+
+    if (history->flags & HISTORY_FLAG_INSIDE_STRUCTURE)
+    {
+        parser_scope_offset_for_structure(node, history);
         return;
     }
 
