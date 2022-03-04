@@ -1,1 +1,4 @@
-int x = 50;
+{
+    int x;
+    int y;
+}
