@@ -4,6 +4,12 @@
 const char* primitive_types[PRIMTIIVE_TYPES_TOTAL] = {
     "void", "char", "short", "int", "long", "float", "double"
 };
+
+bool token_is_identifier(struct token* token)
+{
+    return token && token->type == TOKEN_TYPE_IDENTIFIER;
+}
+
 bool token_is_keyword(struct token *token, const char *value)
 {
     return token && token->type == TOKEN_TYPE_KEYWORD && S_EQ(token->sval, value);
