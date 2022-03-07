@@ -83,6 +83,39 @@ void make_struct_node(const char* name, struct node* body_node)
     node_create(&(struct node){.type=NODE_TYPE_STRUCT, ._struct.body_n=body_node,._struct.name=name,.flags=flags});
 }
 
+struct node* node_from_sym(struct symbol* sym)
+{
+    if (sym->type != SYMBOL_TYPE_NODE)
+    {
+        return NULL;
+    }
+
+    return sym->data;
+}
+
+struct node* node_from_symbol(struct compile_process* current_process, const char* name)
+{
+    struct symbol* sym = symresolver_get_symbol(current_process, name);
+    if (!sym)
+    {
+        return NULL;
+    }
+    return node_from_sym(sym);
+}
+
+
+struct node* struct_node_for_name(struct compile_process* current_process, const char* name)
+{
+    struct node* node = node_from_symbol(current_process, name);
+    if (!node)
+        return NULL;
+    
+    if (node->type != NODE_TYPE_STRUCT)
+        return NULL;
+
+    return node;  
+}
+
 struct node* node_create(struct node* _node)
 {
     struct node* node = malloc(sizeof(struct node));

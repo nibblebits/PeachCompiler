@@ -487,6 +487,20 @@ void parser_datatype_init_type_and_size_for_primitive(struct token *datatype_tok
     parser_datatype_adjust_size_for_secondary(datatype_out, datatype_secondary_token);
 }
 
+size_t size_of_struct(const char* struct_name)
+{
+    struct symbol* sym = symresolver_get_symbol(current_process, struct_name);
+    if (!sym)
+    {
+        return 0;
+    }
+
+    assert(sym->type == SYMBOL_TYPE_NODE);
+    struct node* node = sym->data;
+    assert(node->type == NODE_TYPE_STRUCT);
+    return node->_struct.body_n->body.size;
+}
+
 void parser_datatype_init_type_and_size(struct token *datatype_token, struct token *datatype_secondary_token, struct datatype *datatype_out, int pointer_depth, int expected_type)
 {
     if (!parser_datatype_is_secondary_allowed(expected_type) && datatype_secondary_token)
@@ -501,8 +515,12 @@ void parser_datatype_init_type_and_size(struct token *datatype_token, struct tok
         break;
 
     case DATA_TYPE_EXPECT_STRUCT:
+        datatype_out->type = DATA_TYPE_STRUCT;
+        datatype_out->size = size_of_struct(datatype_token->sval);
+        datatype_out->struct_node = struct_node_for_name(current_process, datatype_token->sval);
+    break;
     case DATA_TYPE_EXPECT_UNION:
-        compiler_error(current_process, "Structure and union types are currently unsupported\n");
+        compiler_error(current_process, "Union types are currently unsupported\n");
         break;
 
     default:

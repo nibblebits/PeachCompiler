@@ -2,4 +2,3 @@
     int x;
     int y;
 }
-
