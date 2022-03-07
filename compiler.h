@@ -259,7 +259,9 @@ enum
 
 enum
 {
-    NODE_FLAG_INSIDE_EXPRESSION = 0b00000001
+    NODE_FLAG_INSIDE_EXPRESSION = 0b00000001,
+    NODE_FLAG_IS_FORWARD_DECLARATION = 0b00000010,
+    NODE_FLAG_HAS_VARIABLE_COMBINED = 0b00000100
 };
 
 
@@ -489,6 +491,7 @@ struct node* node_create(struct node* _node);
 void make_exp_node(struct node* left_node, struct node* right_node, const char* op);
 void make_bracket_node(struct node* node);
 void make_body_node(struct vector* body_vec, size_t size, bool padded, struct node* largest_var_node);
+void make_struct_node(const char* name, struct node* body_node);
 
 struct node* node_pop();
 struct node* node_peek();
@@ -550,6 +553,9 @@ void* scope_last_entity(struct compile_process* process);
 void scope_push(struct compile_process* process, void* ptr, size_t elem_size);
 void scope_finish(struct compile_process* process);
 struct scope* scope_current(struct compile_process* process);
+
+void symresolver_build_for_node(struct compile_process* process, struct node* node);
+
 #define TOTAL_OPERATOR_GROUPS 14
 #define MAX_OPERATORS_IN_GROUP 12
 

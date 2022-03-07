@@ -72,6 +72,17 @@ void make_body_node(struct vector* body_vec, size_t size, bool padded, struct no
     node_create(&(struct node){.type=NODE_TYPE_BODY,.body.statements=body_vec,.body.size=size,.body.padded=padded,.body.largest_var_node=largest_var_node});
 }
 
+void make_struct_node(const char* name, struct node* body_node)
+{
+    int flags = 0;
+    if (!body_node)
+    {
+        flags |= NODE_FLAG_IS_FORWARD_DECLARATION;
+    }
+
+    node_create(&(struct node){.type=NODE_TYPE_STRUCT, ._struct.body_n=body_node,._struct.name=name,.flags=flags});
+}
+
 struct node* node_create(struct node* _node)
 {
     struct node* node = malloc(sizeof(struct node));
