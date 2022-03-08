@@ -7,6 +7,7 @@ static struct token *parser_last_token;
 
 extern struct node *parser_current_body;
 
+
 extern struct expressionable_op_precedence_group op_precedence[TOTAL_OPERATOR_GROUPS];
 
 enum
@@ -54,6 +55,7 @@ struct history
     int flags;
 };
 
+
 struct history *history_begin(int flags)
 {
     struct history *history = calloc(1, sizeof(struct history));
@@ -71,6 +73,8 @@ struct history *history_down(struct history *history, int flags)
 
 int parse_expressionable_single(struct history *history);
 void parse_expressionable(struct history *history);
+void parse_body(size_t *variable_size, struct history *history);
+void parse_keyword(struct history *history);
 
 void parser_scope_new()
 {
@@ -683,7 +687,6 @@ void make_variable_node_and_register(struct history *history, struct datatype *d
     make_variable_node(dtype, name_token, value_node);
     struct node *var_node = node_pop();
 
-#warning "Remember to calculate scope offsets and push to the scope"
     // Calculate the scope offset
     parser_scope_offset(var_node, history);
     // Push the variable node to the scope
