@@ -6,6 +6,7 @@ struct vector* node_vector = NULL;
 struct vector* node_vector_root = NULL;
 
 struct node* parser_current_body = NULL;
+struct node* parser_current_function = NULL;
 
 void node_set_vector(struct vector* vec, struct vector* root_vec)
 {
@@ -83,6 +84,15 @@ void make_struct_node(const char* name, struct node* body_node)
     node_create(&(struct node){.type=NODE_TYPE_STRUCT, ._struct.body_n=body_node,._struct.name=name,.flags=flags});
 }
 
+
+void make_function_node(struct datatype* ret_type, const char* name, struct vector* arguments, struct node* body_node)
+{
+    struct node* func_node = node_create(&(struct node){.type=NODE_TYPE_FUNCTION,.func.name=name,.func.args.vector=arguments,.func.body_n=body_node,.func.rtype=*ret_type,.func.args.stack_addition=DATA_SIZE_DDWORD});
+    return func_node;
+
+    #warning "Dont forget to build the frame elements"
+}
+
 struct node* node_from_sym(struct symbol* sym)
 {
     if (sym->type != SYMBOL_TYPE_NODE)
@@ -120,7 +130,8 @@ struct node* node_create(struct node* _node)
 {
     struct node* node = malloc(sizeof(struct node));
     memcpy(node, _node, sizeof(struct node));
-    #warning "We should set the binded owner and binded function here"
+    node->binded.owner = parser_current_body;
+    node->binded.function = parser_current_function;
     node_push(node);
     return node;
 }
