@@ -1227,6 +1227,7 @@ int parse_expressionable_single(struct history *history)
 
     case TOKEN_TYPE_IDENTIFIER:
         parse_identifier(history);
+        res = 0;
         break;
 
     case TOKEN_TYPE_OPERATOR:
