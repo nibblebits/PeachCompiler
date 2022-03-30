@@ -185,3 +185,9 @@ struct node* variable_node_or_list(struct node* node)
 
     return variable_node(node);
 }
+
+size_t function_node_argument_stack_addition(struct node* node)
+{
+    assert(node->type == NODE_TYPE_FUNCTION);
+    return node->func.args.stack_addition;
+}

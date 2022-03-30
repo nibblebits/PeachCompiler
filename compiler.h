@@ -600,6 +600,8 @@ void symresolver_build_for_node(struct compile_process* process, struct node* no
 struct symbol* symresolver_get_symbol(struct compile_process* process, const char* name);
 struct symbol* symresolver_get_symbol_for_native_function(struct compile_process* process, const char* name);
 
+size_t function_node_argument_stack_addition(struct node* node);
+
 #define TOTAL_OPERATOR_GROUPS 14
 #define MAX_OPERATORS_IN_GROUP 12
 
