@@ -4,4 +4,12 @@ int main(int x)
     {
         int y = 20;
     }
+    else if(2)
+    {
+        int xx = 40;
+    }
+    else
+    {
+        int d = 44;
+    }
 }
