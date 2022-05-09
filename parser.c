@@ -80,6 +80,7 @@ void parse_expressionable(struct history *history);
 void parse_body(size_t *variable_size, struct history *history);
 void parse_keyword(struct history *history);
 struct vector *parse_function_arguments(struct history *history);
+void parse_expressionable_root(struct history *history);
 
 void parser_scope_new()
 {
