@@ -98,6 +98,11 @@ void make_function_node(struct datatype* ret_type, const char* name, struct vect
     #warning "Dont forget to build the frame elements"
 }
 
+void make_if_node(struct node* cond_node, struct node* body_node, struct node* next_node)
+{
+    node_create(&(struct node){.type=NODE_TYPE_STATEMENT_IF, .stmt.if_stmt.cond_node=cond_node,.stmt.if_stmt.body_node=body_node,.stmt.if_stmt.next=next_node});
+}
+
 struct node* node_from_sym(struct symbol* sym)
 {
     if (sym->type != SYMBOL_TYPE_NODE)
