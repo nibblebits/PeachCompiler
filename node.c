@@ -96,6 +96,11 @@ void make_function_node(struct datatype* ret_type, const char* name, struct vect
     #warning "Dont forget to build the frame elements"
 }
 
+void make_do_while_node(struct node* body_node, struct node* exp_node)
+{
+    node_create(&(struct node){.type=NODE_TYPE_STATEMENT_DO_WHILE,.stmt.do_while_stmt.body_node=body_node,.stmt.do_while_stmt.exp_node=exp_node});
+}
+
 void make_while_node(struct node* exp_node, struct node* body_node)
 {
     node_create(&(struct node){.type=NODE_TYPE_STATEMENT_WHILE, .stmt.while_stmt.exp_node=exp_node,.stmt.while_stmt.body_node=body_node});
