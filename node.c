@@ -96,6 +96,11 @@ void make_function_node(struct datatype* ret_type, const char* name, struct vect
     #warning "Dont forget to build the frame elements"
 }
 
+void make_switch_node(struct node* exp_node, struct node* body_node, struct vector* cases, bool has_default_case)
+{
+    node_create(&(struct node){.type=NODE_TYPE_STATEMENT_SWITCH,.stmt.switch_stmt.exp=exp_node,.stmt.switch_stmt.body=body_node,.stmt.switch_stmt.cases=cases,.stmt.switch_stmt.has_default_case=has_default_case});
+}
+
 void make_do_while_node(struct node* body_node, struct node* exp_node)
 {
     node_create(&(struct node){.type=NODE_TYPE_STATEMENT_DO_WHILE,.stmt.do_while_stmt.body_node=body_node,.stmt.do_while_stmt.exp_node=exp_node});
