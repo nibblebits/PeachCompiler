@@ -499,6 +499,8 @@ struct node
         {
             struct node* name;
         } label;
+
+        
     }; 
     
     union 
