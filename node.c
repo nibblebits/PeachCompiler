@@ -56,6 +56,18 @@ struct node* node_peek_expressionable_or_null()
     return node_is_expressionable(last_node) ? last_node : NULL;
 }
 
+void make_continue_node()
+{
+    node_create(&(struct node){.type=NODE_TYPE_STATEMENT_CONTINUE});
+}
+
+
+void make_break_node()
+{
+    node_create(&(struct node){.type=NODE_TYPE_STATEMENT_BREAK});
+}
+
+
 void make_exp_node(struct node* left_node, struct node* right_node, const char* op)
 {
     assert(left_node);

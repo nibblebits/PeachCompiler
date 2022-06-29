@@ -1,7 +1,7 @@
 int main(int x)
 {
-   switch(1)
+   while(1)
    {
-
+       continue;
    }
 }
