@@ -56,6 +56,11 @@ struct node* node_peek_expressionable_or_null()
     return node_is_expressionable(last_node) ? last_node : NULL;
 }
 
+void make_tenary_node(struct node* true_node, struct node* false_node)
+{
+    node_create(&(struct node){.type=NODE_TYPE_TENARY,.tenary.true_node=true_node,.tenary.false_node=false_node});
+}
+
 void make_case_node(struct node* exp_node)
 {
     node_create(&(struct node){.type=NODE_TYPE_STATEMENT_CASE, .stmt._case.exp=exp_node});

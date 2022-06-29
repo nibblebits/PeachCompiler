@@ -352,6 +352,12 @@ struct node
             struct node* val;   
         } var;
 
+        struct node_tenary
+        {
+            struct node* true_node;
+            struct node* false_node;
+        } tenary;
+        
         struct varlist
         {
             // A list of struct node* variables.
@@ -609,6 +615,8 @@ bool node_is_value_type(struct node* node);
 
 
 struct node* struct_node_for_name(struct compile_process* current_process, const char* name);
+
+void make_tenary_node(struct node* true_node, struct node* false_node);
 
 void make_case_node(struct node* exp_node);
 void make_goto_node(struct node* label_node);
