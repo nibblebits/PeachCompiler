@@ -56,6 +56,10 @@ struct node* node_peek_expressionable_or_null()
     return node_is_expressionable(last_node) ? last_node : NULL;
 }
 
+void make_label_node(struct node* name_node)
+{
+    node_create(&(struct node){.type=NODE_TYPE_LABEL, .label.name=name_node});
+}
 void make_continue_node()
 {
     node_create(&(struct node){.type=NODE_TYPE_STATEMENT_CONTINUE});
