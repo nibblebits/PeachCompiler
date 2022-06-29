@@ -56,6 +56,11 @@ struct node* node_peek_expressionable_or_null()
     return node_is_expressionable(last_node) ? last_node : NULL;
 }
 
+void make_goto_node(struct node* label_node)
+{
+    node_create(&(struct node){.type=NODE_TYPE_STATEMENT_GOTO, .stmt._goto.label=label_node});
+}
+
 void make_label_node(struct node* name_node)
 {
     node_create(&(struct node){.type=NODE_TYPE_LABEL, .label.name=name_node});
