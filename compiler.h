@@ -477,6 +477,11 @@ struct node
                 bool has_default_case;
             } switch_stmt;
 
+            struct _case_stmt
+            {
+                struct node* exp;
+            } _case;
+
             struct _goto_stmt
             {
                 struct node* label;
@@ -605,6 +610,7 @@ bool node_is_value_type(struct node* node);
 
 struct node* struct_node_for_name(struct compile_process* current_process, const char* name);
 
+void make_case_node(struct node* exp_node);
 void make_goto_node(struct node* label_node);
 void make_label_node(struct node* name_node);
 
