@@ -1,4 +1,4 @@
 int main(int x)
 {
-   x = abc[50];
+   x = (int) 30;
 }
