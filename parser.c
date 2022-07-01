@@ -106,8 +106,7 @@ void parser_register_case(struct history *history, struct node *case_node)
 {
     assert(history->flags & HISTORY_FLAG_IN_SWITCH_STATEMENT);
     struct parsed_switch_case scase;
-#warning "TO IMPLEMENT, MUST BE SET TO THE CASE INDEX"
-    scase.index = 0;
+    scase.index = case_node->stmt._case.exp->llnum;
     vector_push(history->_switch.case_data.cases, &scase);
 }
 
