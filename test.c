@@ -1,10 +1,9 @@
-struct dog;
-struct dog
+union abc
 {
    int x;
-};
+} kk;
+
 int main(int x, int y)
 {
-   struct dog* b;
    x = (int) 30;
 }

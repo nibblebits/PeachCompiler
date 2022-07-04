@@ -3,7 +3,7 @@
 #include <assert.h>
 
 static struct compile_process *current_process;
-static struct fixup_system* parser_fixup_sys;
+static struct fixup_system *parser_fixup_sys;
 static struct token *parser_last_token;
 
 extern struct node *parser_current_body;
@@ -117,8 +117,8 @@ void parse_body(size_t *variable_size, struct history *history);
 void parse_keyword(struct history *history);
 struct vector *parse_function_arguments(struct history *history);
 void parse_expressionable_root(struct history *history);
-void parse_label(struct history* history);
-void parse_for_tenary(struct history* history);
+void parse_label(struct history *history);
+void parse_for_tenary(struct history *history);
 void parse_datatype(struct datatype *dtype);
 void parse_for_cast();
 
@@ -409,34 +409,34 @@ void parse_for_parentheses(struct history *history)
     parser_deal_with_additional_expression();
 }
 
-void parse_for_comma(struct history* history)
+void parse_for_comma(struct history *history)
 {
     // Skip the comma
     token_next();
-    struct node* left_node = node_pop();
+    struct node *left_node = node_pop();
     parse_expressionable_root(history);
-    struct node* right_node = node_pop();
+    struct node *right_node = node_pop();
     make_exp_node(left_node, right_node, ",");
 }
 
-void parse_for_array(struct history* history)
+void parse_for_array(struct history *history)
 {
-    struct node* left_node = node_peek_or_null();
+    struct node *left_node = node_peek_or_null();
     if (left_node)
     {
         node_pop();
     }
-  
+
     expect_op("[");
     parse_expressionable_root(history);
     expect_sym(']');
 
-    struct node* exp_node = node_pop();
+    struct node *exp_node = node_pop();
     make_bracket_node(exp_node);
 
     if (left_node)
     {
-        struct node* bracket_node = node_pop();
+        struct node *bracket_node = node_pop();
         make_exp_node(left_node, bracket_node, "[]");
     }
 }
@@ -449,7 +449,7 @@ void parse_for_cast()
     expect_sym(')');
 
     parse_expressionable(history_begin(0));
-    struct node* operand_node = node_pop();
+    struct node *operand_node = node_pop();
     make_cast_node(&dtype, operand_node);
 }
 int parse_exp(struct history *history)
@@ -458,15 +458,15 @@ int parse_exp(struct history *history)
     {
         parse_for_parentheses(history);
     }
-    else if(S_EQ(token_peek_next()->sval, "["))
+    else if (S_EQ(token_peek_next()->sval, "["))
     {
         parse_for_array(history);
     }
-    else if(S_EQ(token_peek_next()->sval, "?"))
+    else if (S_EQ(token_peek_next()->sval, "?"))
     {
         parse_for_tenary(history);
     }
-    else if(S_EQ(token_peek_next()->sval, ","))
+    else if (S_EQ(token_peek_next()->sval, ","))
     {
         parse_for_comma(history);
     }
@@ -678,6 +678,21 @@ size_t size_of_struct(const char *struct_name)
     return node->_struct.body_n->body.size;
 }
 
+size_t size_of_union(const char *union_name)
+{
+    struct symbol *sym = symresolver_get_symbol(current_process, union_name);
+    if (!sym)
+    {
+        return 0;
+    }
+
+    assert(sym->type == SYMBOL_TYPE_NODE);
+    struct node *node = sym->data;
+    assert(node->type == NODE_TYPE_UNION);
+    return node->_union.body_n->body.size;
+}
+
+
 void parser_datatype_init_type_and_size(struct token *datatype_token, struct token *datatype_secondary_token, struct datatype *datatype_out, int pointer_depth, int expected_type)
 {
     if (!parser_datatype_is_secondary_allowed(expected_type) && datatype_secondary_token)
@@ -697,7 +712,9 @@ void parser_datatype_init_type_and_size(struct token *datatype_token, struct tok
         datatype_out->struct_node = struct_node_for_name(current_process, datatype_token->sval);
         break;
     case DATA_TYPE_EXPECT_UNION:
-        compiler_error(current_process, "Union types are currently unsupported\n");
+        datatype_out->type = DATA_TYPE_UNION;
+        datatype_out->size = size_of_union(datatype_token->sval);
+        datatype_out->struct_node = union_node_for_name(current_process, datatype_token->sval);
         break;
 
     default:
@@ -786,13 +803,13 @@ void parse_expressionable_root(struct history *history)
 struct datatype_struct_node_fix_private
 {
     // Node to fix.
-    struct node* node;
+    struct node *node;
 };
 
-bool datatype_struct_node_fix(struct fixup* fixup)
+bool datatype_struct_node_fix(struct fixup *fixup)
 {
-    struct datatype_struct_node_fix_private* private = fixup_private(fixup);
-    struct datatype* dtype = &private->node->var.type;
+    struct datatype_struct_node_fix_private *private = fixup_private(fixup);
+    struct datatype *dtype = &private->node->var.type;
     dtype->type = DATA_TYPE_STRUCT;
     dtype->size = size_of_struct(dtype->type_str);
     dtype->struct_node = struct_node_for_name(current_process, dtype->type_str);
@@ -804,7 +821,7 @@ bool datatype_struct_node_fix(struct fixup* fixup)
     return true;
 }
 
-void datatype_struct_node_end(struct fixup* fixup)
+void datatype_struct_node_end(struct fixup *fixup)
 {
     free(fixup_private(fixup));
 }
@@ -818,12 +835,13 @@ void make_variable_node(struct datatype *dtype, struct token *name_token, struct
     }
 
     node_create(&(struct node){.type = NODE_TYPE_VARIABLE, .var.name = name_str, .var.type = *dtype, .var.val = value_node});
-    struct node* var_node = node_peek_or_null();
+    struct node *var_node = node_peek_or_null();
     if (var_node->var.type.type == DATA_TYPE_STRUCT && !var_node->var.type.struct_node)
     {
-        struct datatype_struct_node_fix_private* private = calloc(1, sizeof(struct datatype_struct_node_fix_private));
-        private->node = var_node;
-        fixup_register(parser_fixup_sys, &(struct fixup_config){.fix=datatype_struct_node_fix, .end=datatype_struct_node_end,.private=private});
+        struct datatype_struct_node_fix_private *private = calloc(1, sizeof(struct datatype_struct_node_fix_private));
+    private
+        ->node = var_node;
+        fixup_register(parser_fixup_sys, &(struct fixup_config){.fix = datatype_struct_node_fix, .end = datatype_struct_node_end, .private = private});
     }
 }
 
@@ -1012,7 +1030,7 @@ void parse_symbol()
 
         node_push(body_node);
     }
-    else if(token_next_is_symbol(':'))
+    else if (token_next_is_symbol(':'))
     {
         parse_label(history_begin(0));
         return;
@@ -1265,6 +1283,49 @@ void parse_struct_no_new_scope(struct datatype *dtype, bool is_forward_declarati
     node_push(struct_node);
 }
 
+void parse_union_no_scope(struct datatype *dtype, bool is_forward_declaration)
+{
+    struct node *body_node = NULL;
+    size_t body_variable_size = 0;
+    if (!is_forward_declaration)
+    {
+        parse_body(&body_variable_size, history_begin(HISTORY_FLAG_INSIDE_UNION));
+        body_node = node_pop();
+    }
+
+    make_union_node(dtype->type_str, body_node);
+    struct node *union_node = node_pop();
+    if (body_node)
+    {
+        dtype->size = body_node->body.size;
+    }
+    if (token_peek_next()->type == TOKEN_TYPE_IDENTIFIER)
+    {
+        struct token *var_name = token_next();
+        union_node->flags |= NODE_FLAG_HAS_VARIABLE_COMBINED;
+        make_variable_node_and_register(history_begin(0), dtype, var_name, NULL);
+        union_node->_union.var = node_pop();
+    }
+
+    expect_sym(';');
+    node_push(union_node);
+}
+
+void parse_union(struct datatype *dtype)
+{
+    bool is_forward_declaration = !token_is_symbol(token_peek_next(), '{');
+    if (!is_forward_declaration)
+    {
+        parser_scope_new();
+    }
+    parse_union_no_scope(dtype, is_forward_declaration);
+
+    if (!is_forward_declaration)
+    {
+        parser_scope_finish();
+    }
+}
+
 void parse_struct(struct datatype *dtype)
 {
     bool is_forward_declaration = !token_is_symbol(token_peek_next(), '{');
@@ -1288,7 +1349,7 @@ void parse_struct_or_union(struct datatype *dtype)
         break;
 
     case DATA_TYPE_UNION:
-
+        parse_union(dtype);
         break;
 
     default:
@@ -1347,7 +1408,7 @@ struct vector *parse_function_arguments(struct history *history)
     return arguments_vec;
 }
 
-void parse_forward_declaration(struct datatype* dtype)
+void parse_forward_declaration(struct datatype *dtype)
 {
     // Since this is a forward declaration, parse the structure
     parse_struct(dtype);
@@ -1472,11 +1533,11 @@ void parse_keyword_parentheses_expression(const char *keyword)
     expect_sym(')');
 }
 
-void parse_case(struct history* history)
+void parse_case(struct history *history)
 {
     expect_keyword("case");
     parse_expressionable_root(history);
-    struct node* case_exp_node = node_pop();
+    struct node *case_exp_node = node_pop();
     expect_sym(':');
     make_case_node(case_exp_node);
 
@@ -1485,7 +1546,7 @@ void parse_case(struct history* history)
         compiler_error(current_process, "We only support numbers in our subset of C at this time\n");
     }
 
-    struct node* case_node = node_pop();
+    struct node *case_node = node_pop();
     parser_register_case(history, case_node);
 }
 void parse_switch(struct history *history)
@@ -1497,7 +1558,7 @@ void parse_switch(struct history *history)
     parse_body(&variable_size, history);
     struct node *body_node = node_pop();
     // Make the switch node
-    make_switch_node(switch_exp_node, body_node,  _switch.case_data.cases, _switch.case_data.has_default_case);
+    make_switch_node(switch_exp_node, body_node, _switch.case_data.cases, _switch.case_data.has_default_case);
     parser_end_switch_statement(&_switch);
 }
 
@@ -1601,34 +1662,34 @@ void parse_return(struct history *history)
     expect_sym(';');
 }
 
-void parse_continue(struct history* history)
+void parse_continue(struct history *history)
 {
     expect_keyword("continue");
     expect_sym(';');
     make_continue_node();
 }
 
-void parse_break(struct history* history)
+void parse_break(struct history *history)
 {
     expect_keyword("break");
     expect_sym(';');
     make_break_node();
 }
 
-void parse_goto(struct history* history)
+void parse_goto(struct history *history)
 {
     expect_keyword("goto");
     parse_identifier(history_begin(0));
     expect_sym(';');
 
-    struct node* label_node = node_pop();
+    struct node *label_node = node_pop();
     make_goto_node(label_node);
 }
-void parse_label(struct history* history)
+void parse_label(struct history *history)
 {
     expect_sym(':');
 
-    struct node* label_name_node = node_pop();
+    struct node *label_name_node = node_pop();
     if (label_name_node->type != NODE_TYPE_IDENTIFIER)
     {
         compiler_error(current_process, "Expecting an identifier for labels something else was provided");
@@ -1637,17 +1698,17 @@ void parse_label(struct history* history)
     make_label_node(label_name_node);
 }
 
-void parse_for_tenary(struct history* history)
+void parse_for_tenary(struct history *history)
 {
-    struct node* condition_node = node_pop();
+    struct node *condition_node = node_pop();
     expect_op("?");
     parse_expressionable_root(history_down(history, HISTORY_FLAG_PARENTHESES_IS_NOT_A_FUNCTION_CALL));
-    struct node* true_result_node = node_pop();
+    struct node *true_result_node = node_pop();
     expect_sym(':');
     parse_expressionable_root(history_down(history, HISTORY_FLAG_PARENTHESES_IS_NOT_A_FUNCTION_CALL));
-    struct node* false_result_node = node_pop();
+    struct node *false_result_node = node_pop();
     make_tenary_node(true_result_node, false_result_node);
-    struct node* tenary_node = node_pop();
+    struct node *tenary_node = node_pop();
     make_exp_node(condition_node, tenary_node, "?");
 }
 
@@ -1665,7 +1726,7 @@ void parse_keyword(struct history *history)
         parse_break(history);
         return;
     }
-    else if(S_EQ(token->sval, "continue"))
+    else if (S_EQ(token->sval, "continue"))
     {
         parse_continue(history);
         return;
@@ -1695,26 +1756,24 @@ void parse_keyword(struct history *history)
         parse_do_while(history);
         return;
     }
-    else if(S_EQ(token->sval, "switch"))
+    else if (S_EQ(token->sval, "switch"))
     {
         parse_switch(history);
         return;
     }
-    else if(S_EQ(token->sval, "goto"))
+    else if (S_EQ(token->sval, "goto"))
     {
         parse_goto(history);
         return;
     }
-    else if(S_EQ(token->sval, "case"))
+    else if (S_EQ(token->sval, "case"))
     {
         parse_case(history);
         return;
     }
-    
 
     compiler_error(current_process, "Invalid keyword\n");
 }
-
 
 int parse_expressionable_single(struct history *history)
 {
