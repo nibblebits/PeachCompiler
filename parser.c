@@ -300,6 +300,18 @@ void parser_node_shift_children_left(struct node *node)
     node->exp.right = new_right_operand;
     node->exp.op = right_op;
 }
+
+void parser_node_move_right_left_to_left(struct node* node)
+{
+    make_exp_node(node->exp.left, node->exp.right->exp.left, node->exp.op);
+    struct node* completed_node = node_pop();
+
+    // We still need to deal with the right node
+    const char* new_op = node->exp.right->exp.op;
+    node->exp.left = completed_node;
+    node->exp.right = node->exp.right->exp.right;
+    node->exp.op = new_op;
+}
 void parser_reorder_expression(struct node **node_out)
 {
     struct node *node = *node_out;
@@ -332,6 +344,14 @@ void parser_reorder_expression(struct node **node_out)
             parser_reorder_expression(&node->exp.left);
             parser_reorder_expression(&node->exp.right);
         }
+    }
+
+                             
+    if ((is_array_node(node->exp.left) || is_node_assignment(node->exp.right)) ||
+        ((node_is_expression(node->exp.left, "()")) &&
+         node_is_expression(node->exp.right, ",")))
+    {
+        parser_node_move_right_left_to_left(node);
     }
 }
 
@@ -691,7 +711,6 @@ size_t size_of_union(const char *union_name)
     assert(node->type == NODE_TYPE_UNION);
     return node->_union.body_n->body.size;
 }
-
 
 void parser_datatype_init_type_and_size(struct token *datatype_token, struct token *datatype_secondary_token, struct datatype *datatype_out, int pointer_depth, int expected_type)
 {
