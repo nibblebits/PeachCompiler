@@ -1,1 +1,3 @@
-jmp label_name
+section .data
+section .text
+section .rodata
