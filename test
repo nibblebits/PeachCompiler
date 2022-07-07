@@ -7,7 +7,5 @@ y: dd 0
 e: db 0
 section .text
 section .rodata
-.entry_point_1:
-jmp .exit_point_2
-jmp .entry_point_1
-.exit_point_2:
+str_1: db 'H', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', '!', '!', 0
+str_2: db 'A', 'b', 'c', 10, 0
