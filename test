@@ -1,11 +1,5 @@
 section .data
-; int x
-x: dd 0
-; int y
-y: dd 0
-; char e
-e: db 0
+; int a
+a: dd 50
 section .text
 section .rodata
-str_1: db 'H', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', '!', '!', 0
-str_2: db 'A', 'b', 'c', 10, 0

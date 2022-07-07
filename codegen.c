@@ -239,11 +239,13 @@ void codegen_generate_global_variable_for_primitive(struct node* node)
         }
         else
         {
-            #warning "dont forget to handle the numeric value"
+            asm_push("%s: %s %lld", node->var.name, asm_keyword_for_size(variable_size(node), tmp_buf), node->var.val->llnum);
         }
     }
-
-    asm_push("%s: %s 0", node->var.name, asm_keyword_for_size(variable_size(node), tmp_buf));
+    else
+    {
+        asm_push("%s: %s 0", node->var.name, asm_keyword_for_size(variable_size(node), tmp_buf));
+    }
 }
 void codegen_generate_global_variable(struct node* node)
 {
@@ -369,11 +371,6 @@ int codegen(struct compile_process* process)
     vector_set_peek_pointer(process->node_tree_vec, 0);
     codegen_generate_root();
     codegen_finish_scope();
-
-    codegen_register_string("Hello world!!");
-    codegen_register_string("Hello world!!");
-    codegen_register_string("Hello world!!");
-    codegen_register_string("Abc\n");
 
     // Generate read only data
     codegen_generate_rod();
