@@ -7,3 +7,7 @@ y: dd 0
 e: db 0
 section .text
 section .rodata
+.entry_point_1:
+jmp .exit_point_2
+jmp .entry_point_1
+.exit_point_2:
