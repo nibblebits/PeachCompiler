@@ -1,1 +1,1 @@
-int a = 50;
+const char* hello = "hello";
