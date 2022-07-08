@@ -135,8 +135,8 @@ void make_union_node(const char *name, struct node *body_node)
 
 void make_function_node(struct datatype *ret_type, const char *name, struct vector *arguments, struct node *body_node)
 {
-    node_create(&(struct node){.type = NODE_TYPE_FUNCTION, .func.name = name, .func.args.vector = arguments, .func.body_n = body_node, .func.rtype = *ret_type, .func.args.stack_addition = DATA_SIZE_DDWORD});
-#warning "Dont forget to build the frame elements"
+    struct node* function_node = node_create(&(struct node){.type = NODE_TYPE_FUNCTION, .func.name = name, .func.args.vector = arguments, .func.body_n = body_node, .func.rtype = *ret_type, .func.args.stack_addition = DATA_SIZE_DDWORD});
+    function_node->func.frame.elements = vector_create(sizeof(struct stack_frame_element));
 }
 
 void make_switch_node(struct node *exp_node, struct node *body_node, struct vector *cases, bool has_default_case)

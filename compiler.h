@@ -197,6 +197,7 @@ struct string_table_element
     const char label[50];
 };
 
+
 struct code_generator
 {
     // A vector of struct string_table_element*
@@ -345,6 +346,61 @@ struct parsed_switch_case
 
 
 
+struct stack_frame_data
+{
+    /*
+    * The datatype that was pushed to the stack
+    */
+    struct datatype dtype;
+};
+
+struct stack_frame_element
+{   
+    // Stack frame element flags
+    int flags;
+    // The type of frame element
+    int type;
+    /**
+     * The name of the frame element, not a variable name. I.e result_value
+     */
+    const char* name;
+
+    // The offset this element is on the base pointer
+    int offset_from_bp;
+
+    struct stack_frame_data data;
+};
+
+
+#define STACK_PUSH_SIZE 4
+enum
+{
+    STACK_FRAME_ELEMENT_TYPE_LOCAL_VARIABLE,
+    STACK_FRAME_ELEMENT_TYPE_SAVED_REGISTER,
+    STACK_FRAME_ELEMENT_TYPE_SAVED_BP,
+    STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE,
+    STACK_FRAME_ELEMENT_TYPE_UNKNOWN,
+};
+
+enum
+{
+    STACK_FRAME_ELEMENT_FLAG_IS_PUSHED_ADDRESS = 0b00000001,
+    STACK_FRAME_ELEMENT_FLAG_ELEMENT_NOT_FOUND = 0b00000010,
+    STACK_FRAME_ELEMENT_FLAG_IS_NUMERICAL = 0b00000100,
+    STACK_FRAME_ELEMENT_FLAG_HAS_DATATYPE = 0b00001000,
+};
+
+void stackframe_pop(struct node* func_node);
+struct stack_frame_element* stackframe_back(struct node* func_node);
+struct stack_frame_element* stackframe_back_expect(struct node* func_node, int expecting_type, const char* expecting_name);
+void stackframe_pop_expecting(struct node* func_node, int expecting_type, const char* expecting_name);
+void stackframe_peek_start(struct node* func_node);
+struct stack_frame_element* stackframe_peek(struct node* func_node);
+void stackframe_push(struct node* func_node, struct stack_frame_element* element);
+void stackframe_sub(struct node* func_node, int type, const char* name, size_t amount);
+void stackframe_add(struct node* func_node, int type, const char* name, size_t amount);
+void stackframe_assert_empty(struct node* func_node);
+
 struct node
 {
     int type;
@@ -477,6 +533,12 @@ struct node
             // Pointer to the function body node, NULL if this is a function prototype
             struct node *body_n;
 
+            struct stack_frame
+            {
+                // A vector of stack_frame_element
+                struct vector* elements;
+            } frame;
+            
             // The stack size for all variables inside this function.
             size_t stack_size;
         } func;
