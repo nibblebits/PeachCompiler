@@ -1,6 +1,7 @@
 #include "compiler.h"
 #include "helpers/vector.h"
 #include <stdlib.h>
+#include <assert.h>
 
 bool resolver_result_failed(struct resolver_result* result)
 {
@@ -215,3 +216,40 @@ struct resolver_entity* resolver_create_new_entity(struct resolver_result* resul
     return entity;
 }
 
+struct resolver_entity* resolver_create_new_entity_for_unsupported_node(struct resolver_result* result, struct node* node)
+{
+    struct resolver_entity* entity = resolver_create_new_entity(result, RESOLVER_ENTITY_TYPE_UNSUPPORTED, NULL);
+    if (!entity)
+    {
+        return NULL;
+    }
+
+    entity->node = node;
+    entity->flags = RESOLVER_ENTITY_FLAG_NO_MERGE_WITH_LEFT_ENTITY | RESOLVER_ENTITY_FLAG_NO_MERGE_WITH_NEXT_ENTITY;
+    return entity;
+}
+
+struct resolver_entity* resolver_create_new_entity_for_array_bracket(struct resolver_result* result, struct resolver_process* process, struct node* node, struct node* array_index_node, int index, struct datatype* dtype, void* private, struct resolver_scope* scope)
+{
+    struct resolver_entity* entity = resolver_create_new_entity(result, RESOLVER_ENTITY_TYPE_ARRAY_BRACKET, private);
+    if (!entity)
+    {
+        return NULL;
+    }
+
+    entity->scope = scope;
+    assert(entity->scope);
+    entity->name = NULL;
+    entity->dtype = *dtype;
+    entity->node = node;
+    entity->array.index = index;
+    entity->array.dtype = *dtype;
+    entity->array.array_index_node = array_index_node;
+    int array_index_val = 1;
+    if (array_index_node->type == NODE_TYPE_NUMBER)
+    {
+        array_index_val = array_index_node->llnum;
+    }
+    entity->offset = array_offset(dtype, index, array_index_val);
+    return entity;
+}

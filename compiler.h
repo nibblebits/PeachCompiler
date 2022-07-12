@@ -787,7 +787,6 @@ struct resolver_entity
         struct resolver_array
         {
             struct datatype dtype;
-            int multiplier;
             struct node* array_index_node;
             int index;
         } array;
@@ -999,6 +998,9 @@ int array_total_indexes(struct datatype *dtype);
 bool datatype_is_struct_or_union(struct datatype *dtype);
 struct node *variable_struct_or_union_body_node(struct node *node);
 struct node *variable_node_or_list(struct node *node);
+
+int array_multiplier(struct datatype *dtype, int index, int index_value);
+int array_offset(struct datatype *dtype, int index, int index_value);
 
 /**
  * @brief Gets the variable size from the given variable node
