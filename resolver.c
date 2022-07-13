@@ -396,3 +396,83 @@ struct resolver_entity* resolver_new_entity_for_var_node(struct resolver_process
     vector_push(process->scope.current->entities, &entity);
     return entity;
 }
+
+void resolver_new_entity_for_rule(struct resolver_process* process, struct resolver_result* result, struct resolver_entity_rule* rule)
+{
+    struct resolver_entity* entity_rule = resolver_create_new_entity(result, RESOLVER_ENTITY_TYPE_RULE, NULL);
+    entity_rule->rule = *rule;
+    resolver_result_entity_push(result, entity_rule);
+}
+
+struct resolver_entity* resolver_make_entity(struct resolver_process* process, struct resolver_result* result, struct datatype* custom_dtype, struct node* node, struct resolver_entity* guided_entity, struct resolver_scope* scope)
+{
+    struct resolver_entity* entity = NULL;
+    int offset = guided_entity->offset;
+    int flags = guided_entity->flags;
+    switch(node->type)
+    {
+        case NODE_TYPE_VARIABLE:
+            entity = resolver_new_entity_for_var_node_no_push(process, node, NULL, offset, scope);
+        break;
+
+        default:
+            entity = resolver_create_new_unknown_entity(process, result, custom_dtype, node, scope, offset);
+    }
+
+    if (entity)
+    {
+        entity->flags |= flags;
+        if (custom_dtype)
+        {
+            entity->dtype = *custom_dtype;
+        }
+
+        entity->private = process->callbacks.make_private(entity, node, offset, scope);
+    }
+    return entity;
+}
+
+struct resolver_entity* resolver_create_new_entity_for_function_call(struct resolver_result* result, struct resolver_process* process, struct resolver_entity* left_operand_entity, void* private)
+{
+    struct resolver_entity* entity = resolver_create_new_entity(result, RESOLVER_ENTITY_TYPE_FUNCTION_CALL, private);
+    if (!entity)
+    {
+        return NULL;
+    }
+
+    entity->dtype = left_operand_entity->dtype;
+    entity->func_call_data.arguments = vector_create(sizeof(struct node*));
+    return entity;
+}
+
+struct resolver_entity* resolver_regster_function(struct resolver_process* process, struct node* func_node, void* private)
+{
+    struct resolver_entity* entity = resolver_create_new_entity(NULL, RESOLVER_ENTITY_TYPE_FUNCTION, private);
+    if (!entity)
+    {
+        return NULL;
+    }
+
+    entity->name = func_node->func.name;
+    entity->node = func_node;
+    entity->dtype = func_node->func.rtype;
+    entity->scope = resolver_process_scope_current(process);
+    vector_push(process->scope.root->entities, &entity);
+    return entity;
+}
+
+struct resolver_entity* resolver_get_entity_in_scope_with_entity_type(struct resolver_result* result, struct resolver_process* resolver, struct resolver_scope* scope, const char* entity_name, int entity_type)
+{
+
+    /*
+     * Are we accessing a structure or union 
+     */
+    if (result && result->last_struct_union_entity)
+    {
+        struct resolver_scope* scope = result->last_struct_union_entity->scope;
+        struct node* out_node = NULL;
+        struct datatype* node_var_datatype = &result->last_struct_union_entity->dtype;
+        int offset = struct_offset(resolver_compiler(resolver), node_var_datatype->type_str, entity_name, &out_node, 0, 0);
+
+    }
+}
