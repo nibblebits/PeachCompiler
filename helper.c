@@ -203,3 +203,37 @@ int struct_offset(struct compile_process* compile_proc, const char* struct_name,
     vector_unset_flag(struct_vars_vec, VECTOR_FLAG_PEEK_DECREMENT);
     return position;
 }
+
+bool is_access_operator(const char* op)
+{
+    return S_EQ(op, "->") || S_EQ(op, ".");
+}
+bool is_access_node(struct node* node)
+{
+    return node->type == NODE_TYPE_EXPRESSION && is_access_operator(node->exp.op);
+}
+
+bool is_access_node_with_op(struct node* node, const char* op)
+{
+    return is_access_node(node) && S_EQ(node->exp.op, op);
+}
+
+bool is_array_operator(const char* op)
+{
+    return S_EQ(op, "[]");
+}
+
+bool is_array_node(struct node* node)
+{
+    return node->type == NODE_TYPE_EXPRESSION && is_array_operator(node->exp.op);
+}
+
+bool is_parentheses_operator(const char* op)
+{
+    return S_EQ(op, "()");
+}
+
+bool is_parentheses_node(struct node* node)
+{
+    return node->type == NODE_TYPE_EXPRESSION && is_parentheses_operator(node->exp.op);
+}

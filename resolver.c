@@ -2,6 +2,7 @@
 #include "helpers/vector.h"
 #include <stdlib.h>
 #include <assert.h>
+void resolver_follow_part(struct resolver_process *resolver, struct node *node, struct resolver_result *result);
 
 bool resolver_result_failed(struct resolver_result *result)
 {
@@ -586,6 +587,44 @@ struct resolver_entity *resolver_follow_identifier(struct resolver_process *reso
     }
     return entity;
 }
+
+struct resolver_entity* resolver_follow_variable(struct resolver_process* resolver, struct node* var_node, struct resolver_result* result)
+{
+    struct resolver_entity* entity = resolver_follow_for_name(resolver, var_node->var.name, result);
+    return entity;
+}
+
+struct resolver_entity* resolver_follow_struct_exp(struct resolver_process* resolver, struct node* node, struct resolver_result* result)
+{
+    // a.b
+    resolver_follow_part(resolver, node->exp.left, result);
+    struct resolver_entity* left_entity = resolver_result_peek(result);
+    struct resolver_entity_rule rule = {};
+    if (is_access_node_with_op(node, "->"))
+    {
+        //a->b (do not merge)
+        rule.left.flags = RESOLVER_ENTITY_FLAG_NO_MERGE_WITH_NEXT_ENTITY;
+        if (left_entity->type != RESOLVER_ENTITY_TYPE_FUNCTION_CALL)
+        {
+//            int* a;
+  //          *a = 50;
+            rule.right.flags = RESOLVER_ENTITY_FLAG_DO_INDIRECTION;
+        }
+    }
+
+    resolver_new_entity_for_rule(resolver, result, &rule);
+    resolver_follow_part(resolver, node->exp.right, result);
+    return NULL;
+}
+
+struct resolver_entity* resolver_follow_exp(struct resolver_process* resolver, struct node* node, struct resolver_result* result)
+{
+    struct resolver_entity* entity = NULL;
+    if (is_access_node(node))
+    {
+        entity = resolver_follow_struct_exp(resolver, node, result);
+    }
+}
 struct resolver_entity *resolver_follow_part_return_entity(struct resolver_process *resolver, struct node *node, struct resolver_result *result)
 {
     struct resolver_entity *entity = NULL;
@@ -593,6 +632,13 @@ struct resolver_entity *resolver_follow_part_return_entity(struct resolver_proce
     {
     case NODE_TYPE_IDENTIFIER:
         entity = resolver_follow_identifier(resolver, node, result);
+        break;
+    case NODE_TYPE_VARIABLE:
+        entity = resolver_follow_variable(resolver, node, result);
+        break;
+
+    case NODE_TYPE_EXPRESSION:
+        entity = resolver_follow_exp(resolver, node, result);
         break;
     }
 }
