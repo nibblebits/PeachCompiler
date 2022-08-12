@@ -313,3 +313,8 @@ bool is_node_assignment(struct node *node)
            S_EQ(node->exp.op, "/=") ||
            S_EQ(node->exp.op, "*=");
 }
+
+bool node_valid(struct node* node)
+{
+    return node && node->type != NODE_TYPE_BLANK;
+}
