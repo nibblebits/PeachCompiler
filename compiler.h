@@ -1000,6 +1000,9 @@ bool is_parentheses_node(struct node* node);
 bool is_access_node_with_op(struct node* node, const char* op);
 bool is_argument_operator(const char* op);
 bool is_argument_node(struct node* node);
+void datatype_decrement_pointer(struct datatype* dtype);
+size_t array_brackets_count(struct datatype* dtype);
+
 bool node_is_expressionable(struct node *node);
 bool node_valid(struct node* node);
 

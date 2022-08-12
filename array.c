@@ -54,6 +54,11 @@ size_t array_brackets_calculate_size_from_index(struct datatype* dtype, struct a
     return size;
 }
 
+size_t array_brackets_count(struct datatype* dtype)
+{
+    return vector_count(dtype->array.brackets->n_brackets);
+}
+
 size_t array_brackets_calculate_size(struct datatype* dtype, struct array_brackets* brackets)
 {
     return array_brackets_calculate_size_from_index(dtype, brackets, 0);
