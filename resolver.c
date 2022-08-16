@@ -6,6 +6,7 @@ void resolver_follow_part(struct resolver_process *resolver, struct node *node, 
 struct resolver_entity* resolver_follow_exp(struct resolver_process* resolver, struct node* node, struct resolver_result* result);
 struct resolver_result *resolver_follow(struct resolver_process *resolver, struct node *node);
 struct resolver_entity* resolver_follow_array_bracket(struct resolver_process* resolver, struct node* node, struct resolver_result* result);
+struct resolver_entity *resolver_follow_part_return_entity(struct resolver_process *resolver, struct node *node, struct resolver_result *result);
 
 bool resolver_result_failed(struct resolver_result *result)
 {
@@ -765,6 +766,47 @@ struct resolver_entity* resolver_follow_array_bracket(struct resolver_process* r
     return array_bracket_entity;
 }
 
+struct resolver_entity* resolver_follow_exp_parenthesis(struct resolver_process* resolver, struct node* node, struct resolver_result* result)
+{
+    return resolver_follow_part_return_entity(resolver, node->parenthesis.exp, result);
+}
+
+struct resolver_entity* resolver_follow_unsupported_unary_node(struct resolver_process* resolver, struct node* node, struct resolver_result* result)
+{
+    return resolver_follow_part_return_entity(resolver, node->unary.operand, result);
+}
+
+struct resolver_entity* resolver_follow_unsupported_node(struct resolver_process* resolver, struct node* node, struct resolver_result* result)
+{
+    bool followed = false;
+    switch(node->type)
+    {
+        case NODE_TYPE_UNARY:
+        resolver_follow_unsupported_unary_node(resolver, node, result);
+        followed = true;
+        break;
+
+        default:
+            followed = false;
+    }
+
+    struct resolver_entity* unsupported_entity = resolver_create_new_entity_for_unsupported_node(result, node);
+    assert(unsupported_entity);
+    resolver_result_entity_push(result, unsupported_entity);
+    return unsupported_entity;
+}
+struct resolver_entity* resolver_follow_cast(struct resolver_process* resolver, struct node* node, struct resolver_result* result)
+{
+    struct resolver_entity* operand_entity = NULL;
+    resolver_follow_unsupported_node(resolver, node->cast.operand, result);
+    operand_entity = resolver_result_peek(result);
+    operand_entity->flags |= RESOLVER_ENTITY_FLAG_WAS_CASTED;
+
+    struct resolver_entity* cast_entity = resolver_create_new_cast_entity(resolver, operand_entity->scope, &node->cast.dtype);
+    resolver_result_entity_push(result, cast_entity);
+    return cast_entity;
+}
+
 struct resolver_entity *resolver_follow_part_return_entity(struct resolver_process *resolver, struct node *node, struct resolver_result *result)
 {
     struct resolver_entity *entity = NULL;
@@ -783,6 +825,14 @@ struct resolver_entity *resolver_follow_part_return_entity(struct resolver_proce
 
     case NODE_TYPE_BRACKET:
         entity = resolver_follow_array_bracket(resolver, node, result);
+        break;
+    
+    case NODE_TYPE_EXPRESSION_PARENTHESES:
+        entity = resolver_follow_exp_parenthesis(resolver, node, result);
+        break;
+
+    case NODE_TYPE_CAST:
+        entity = resolver_follow_cast(resolver, node, result);
         break;
     }
 }
