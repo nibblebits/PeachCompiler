@@ -853,7 +853,7 @@ struct resolver_entity
     struct resolver_result* result;
 
     // The resolver process
-    struct resolver_process* process;
+    struct resolver_process* resolver;
 
     // Private data that only the resolver entity creator knows about.
     void* private;
@@ -976,6 +976,7 @@ bool is_array_node(struct node *node);
 bool is_node_assignment(struct node *node);
 bool is_unary_operator(const char* op);
 bool op_is_indirection(const char* op);
+bool op_is_address(const char* op);
 
 struct node *struct_node_for_name(struct compile_process *current_process, const char *name);
 struct node* union_node_for_name(struct compile_process* current_process, const char* name);

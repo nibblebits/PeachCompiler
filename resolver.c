@@ -807,6 +807,46 @@ struct resolver_entity* resolver_follow_cast(struct resolver_process* resolver, 
     return cast_entity;
 }
 
+struct resolver_entity* resolver_follow_indirection(struct resolver_process* resolver, struct node* node, struct resolver_result* result)
+{
+    // Indirection **a.b *a.b *****k
+    resolver_follow_part(resolver, node->unary.operand, result);
+
+    struct resolver_entity* last_entity = resolver_result_peek(result);
+    if (!last_entity)
+    {
+        last_entity = resolver_follow_unsupported_node(resolver, node->unary.operand, result);
+    }
+    struct resolver_entity* unary_indirection_entity = resolver_create_new_unary_indirection_entity(resolver, result, node, node->unary.indirection.depth);
+    resolver_result_entity_push(result, unary_indirection_entity);
+    return unary_indirection_entity;
+}
+
+struct resolver_entity* resolver_follow_unary_address(struct resolver_process* resolver, struct node* node, struct resolver_result* result)
+{
+    // &a.b.c
+    resolver_follow_part(resolver, node->unary.operand, result);
+    struct resolver_entity* last_entity = resolver_result_peek(result);
+    struct resolver_entity* unary_address_entity = resolver_create_new_unary_get_address_entity(resolver, result, &last_entity->dtype, node, last_entity->scope, last_entity->offset);
+    resolver_result_entity_push(result, unary_address_entity);
+    return unary_address_entity;
+}
+
+struct resolver_entity* resolver_follow_unary(struct resolver_process* resolver, struct node* node, struct resolver_result* result)
+{
+    struct resolver_entity* result_entity = NULL;
+    if (op_is_indirection(node->unary.op))
+    {
+        result_entity = resolver_follow_indirection(resolver, node, result);
+    }
+    else if(op_is_address(node->unary.op))
+    {
+        result_entity = resolver_follow_unary_address(resolver, node, result);
+    }
+
+    return result_entity;
+}
+
 struct resolver_entity *resolver_follow_part_return_entity(struct resolver_process *resolver, struct node *node, struct resolver_result *result)
 {
     struct resolver_entity *entity = NULL;
@@ -834,7 +874,25 @@ struct resolver_entity *resolver_follow_part_return_entity(struct resolver_proce
     case NODE_TYPE_CAST:
         entity = resolver_follow_cast(resolver, node, result);
         break;
+
+    case NODE_TYPE_UNARY:
+        entity = resolver_follow_unary(resolver, node, result);
+        break;
+
+    default:
+        {
+            // Can't do aanything lets create a special entity that requires more computation later on at runtime.
+            entity = resolver_follow_unsupported_node(resolver, node, result);
+        }
     }
+
+    if (entity)
+    {
+        entity->result = result;
+        entity->resolver = resolver;
+    }
+
+    return entity;
 }
 
 void resolver_follow_part(struct resolver_process *resolver, struct node *node, struct resolver_result *result)
