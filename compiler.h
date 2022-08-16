@@ -401,7 +401,23 @@ void stackframe_sub(struct node* func_node, int type, const char* name, size_t a
 void stackframe_add(struct node* func_node, int type, const char* name, size_t amount);
 void stackframe_assert_empty(struct node* func_node);
 
-
+struct node;
+struct unary
+{
+    // "*" for pointer access.. **** even for multiple pointer access only the first operator
+    // is here
+    const char* op;
+    struct node* operand;
+    union
+    {
+        struct indirection
+        {
+            // The pointer depth
+            int depth;
+        } indirection;
+    };
+    
+};
 struct node
 {
     int type;
@@ -617,6 +633,8 @@ struct node
             struct datatype dtype;
             struct node *operand;
         } cast;
+
+        struct unary unary;
     };
 
     union
@@ -956,6 +974,9 @@ bool node_is_expression(struct node *node, const char *op);
 bool node_is_struct_or_union(struct node* node);
 bool is_array_node(struct node *node);
 bool is_node_assignment(struct node *node);
+bool is_unary_operator(const char* op);
+bool op_is_indirection(const char* op);
+
 struct node *struct_node_for_name(struct compile_process *current_process, const char *name);
 struct node* union_node_for_name(struct compile_process* current_process, const char* name);
 
@@ -984,6 +1005,7 @@ void make_for_node(struct node *init_node, struct node *cond_node, struct node *
 void make_return_node(struct node *exp_node);
 void make_if_node(struct node *cond_node, struct node *body_node, struct node *next_node);
 void make_else_node(struct node *body_node);
+void make_unary_node(const char* op, struct node* operand_node);
 
 struct node *node_pop();
 struct node *node_peek();

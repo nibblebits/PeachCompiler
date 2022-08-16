@@ -75,6 +75,10 @@ struct history
     } _switch;
 };
 
+int parser_get_pointer_depth();
+void parser_deal_with_additional_expression();
+void parse_for_parentheses(struct history *history);
+
 struct history *history_begin(int flags)
 {
     struct history *history = calloc(1, sizeof(struct history));
@@ -301,13 +305,13 @@ void parser_node_shift_children_left(struct node *node)
     node->exp.op = right_op;
 }
 
-void parser_node_move_right_left_to_left(struct node* node)
+void parser_node_move_right_left_to_left(struct node *node)
 {
     make_exp_node(node->exp.left, node->exp.right->exp.left, node->exp.op);
-    struct node* completed_node = node_pop();
+    struct node *completed_node = node_pop();
 
     // We still need to deal with the right node
-    const char* new_op = node->exp.right->exp.op;
+    const char *new_op = node->exp.right->exp.op;
     node->exp.left = completed_node;
     node->exp.right = node->exp.right->exp.right;
     node->exp.op = new_op;
@@ -346,13 +350,50 @@ void parser_reorder_expression(struct node **node_out)
         }
     }
 
-                             
     if ((is_array_node(node->exp.left) || is_node_assignment(node->exp.right)) ||
         ((node_is_expression(node->exp.left, "()")) &&
          node_is_expression(node->exp.right, ",")))
     {
         parser_node_move_right_left_to_left(node);
     }
+}
+
+bool parser_is_unary_operator(const char *op)
+{
+    return is_unary_operator(op);
+}
+
+void parse_for_indirection_unary()
+{
+    int depth = parser_get_pointer_depth();
+    parse_expressionable(history_begin(0));
+    struct node *unary_operand_node = node_pop();
+    make_unary_node("*", unary_operand_node);
+
+    struct node *unary_node = node_pop();
+    unary_node->unary.indirection.depth = depth;
+    node_push(unary_node);
+}
+
+void parse_for_normal_unary()
+{
+    const char *unary_op = token_next()->sval;
+    parse_expressionable(history_begin(0));
+    struct node *unary_operand_node = node_pop();
+    make_unary_node(unary_op, unary_operand_node);
+}
+
+void parse_for_unary()
+{
+    const char *unary_op = token_peek_next()->sval;
+    if (op_is_indirection(unary_op))
+    {
+        parse_for_indirection_unary();
+        return;
+    }
+
+    parse_for_normal_unary();
+    parser_deal_with_additional_expression();
 }
 
 void parse_exp_normal(struct history *history)
@@ -362,6 +403,12 @@ void parse_exp_normal(struct history *history)
     struct node *node_left = node_peek_expressionable_or_null();
     if (!node_left)
     {
+        if (!parser_is_unary_operator(op))
+        {
+            compiler_error(current_process, "The given expression has no left operand");
+        }
+
+        parse_for_unary();
         return;
     }
 
@@ -371,7 +418,27 @@ void parse_exp_normal(struct history *history)
     // Pop off the left node
     node_pop();
     node_left->flags |= NODE_FLAG_INSIDE_EXPRESSION;
-    parse_expressionable_for_op(history_down(history, history->flags), op);
+
+    if (token_peek_next()->type == TOKEN_TYPE_OPERATOR)
+    {
+        if (S_EQ(token_peek_next()->sval, "("))
+        {
+            parse_for_parentheses(history_down(history, history->flags | HISTORY_FLAG_PARENTHESES_IS_NOT_A_FUNCTION_CALL));
+        }
+        else if (parser_is_unary_operator(token_peek_next()->sval))
+        {
+            parse_for_unary();
+        }
+        else
+        {
+            compiler_error(current_process, "Two operators are expected for a given expression for operator %s\n", token_peek_next()->sval);
+        }
+    }
+    else
+    {
+        parse_expressionable_for_op(history_down(history, history->flags), op);
+    }
+
     struct node *node_right = node_pop();
     node_right->flags |= NODE_FLAG_INSIDE_EXPRESSION;
 
@@ -858,8 +925,8 @@ void make_variable_node(struct datatype *dtype, struct token *name_token, struct
     if (var_node->var.type.type == DATA_TYPE_STRUCT && !var_node->var.type.struct_node)
     {
         struct datatype_struct_node_fix_private *private = calloc(1, sizeof(struct datatype_struct_node_fix_private));
-    private
-        ->node = var_node;
+        private
+            ->node = var_node;
         fixup_register(parser_fixup_sys, &(struct fixup_config){.fix = datatype_struct_node_fix, .end = datatype_struct_node_end, .private = private});
     }
 }
@@ -1800,7 +1867,7 @@ void parse_keyword(struct history *history)
     compiler_error(current_process, "Invalid keyword\n");
 }
 
-void parse_string(struct history* history)
+void parse_string(struct history *history)
 {
     parse_single_token_to_node();
 }
@@ -1906,6 +1973,6 @@ int parse(struct compile_process *process)
 
     assert(fixups_resolve(parser_fixup_sys));
     scope_free_root(process);
-    
+
     return PARSE_ALL_OK;
 }
