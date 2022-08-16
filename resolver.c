@@ -947,8 +947,74 @@ void resolver_execute_rules(struct resolver_process *resolver, struct resolver_r
     resolver_push_vector_of_entities(result, saved_entities);
 }
 
-void resolver_merge_compile_times(struct resolver_process *resolver, struct resolver_result *result)
+struct resolver_entity* resolver_merge_compile_time_result(struct resolver_process* resolver, struct resolver_result* result, struct resolver_entity* left_entity, struct resolver_entity* right_entity)
 {
+    if (left_entity && right_entity)
+    {
+        if(left_entity->flags & RESOLVER_ENTITY_FLAG_NO_MERGE_WITH_NEXT_ENTITY  ||
+            right_entity->flags & RESOLVER_ENTITY_FLAG_NO_MERGE_WITH_LEFT_ENTITY)
+        {
+            goto no_merge_possible;
+        }
+
+        struct resolver_entity* result_entity = 
+                            resolver->callbacks.merge_entities(resolver, result, left_entity, right_entity);
+        if (!result_entity)
+        {
+            goto no_merge_possible;
+        }
+
+        return result_entity;
+    }
+
+no_merge_possible:
+    return NULL;
+}
+
+void _resolver_merge_compile_times(struct resolver_process *resolver, struct resolver_result *result)
+{
+    struct vector* saved_entities = vector_create(sizeof(struct resolver_entity*));
+    while(1)
+    {
+        struct resolver_entity* right_entity = resolver_result_pop(result);
+        struct resolver_entity* left_entity = resolver_result_pop(result);
+        if(!right_entity)
+        {
+            break;
+        }
+
+        if (!left_entity)
+        {
+            // only one entity
+            resolver_result_entity_push(result, right_entity);
+            break;
+        }
+
+        struct resolver_entity* merged_entity = resolver_merge_compile_time_result(resolver, result, left_entity, right_entity);
+        if (merged_entity)
+        {
+            resolver_result_entity_push(result, merged_entity);
+            continue;
+        }
+
+        right_entity->flags |= RESOLVER_ENTITY_FLAG_NO_MERGE_WITH_LEFT_ENTITY;
+        vector_push(saved_entities, &right_entity);
+        // The left entity goes back to the result as we may be able to merge with next entity.
+        resolver_result_entity_push(result, left_entity);
+    }
+
+    resolver_push_vector_of_entities(result, saved_entities);
+    vector_free(saved_entities);
+}
+
+void resolver_merge_compile_times(struct resolver_process* resolver, struct resolver_result* result)
+{
+    size_t total_entities = 0;
+    do
+    {
+        total_entities = result->count;
+        _resolver_merge_compile_times(resolver, result);
+    } while(total_entities != 1 && total_entities != result->count);
 }
 
 void resolver_finalize_result(struct resolver_process *resolver, struct resolver_result *result)
