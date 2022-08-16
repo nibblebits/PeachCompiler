@@ -263,6 +263,8 @@ bool op_is_address(const char* op)
     return S_EQ(op, "&");
 }
 
+
+
 void datatype_decrement_pointer(struct datatype* dtype)
 {
     dtype->pointer_depth--;
