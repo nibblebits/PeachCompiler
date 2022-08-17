@@ -292,6 +292,22 @@ size_t function_node_argument_stack_addition(struct node *node)
     return node->func.args.stack_addition;
 }
 
+size_t function_node_stack_size(struct node* node)
+{
+    assert(node->type == NODE_TYPE_FUNCTION);
+    return node->func.stack_size;
+}
+
+bool function_node_is_prototype(struct node* node)
+{
+    return node->func.body_n == NULL;
+}
+
+struct vector* function_node_argument_vec(struct node* node)
+{
+    assert(node->type == NODE_TYPE_FUNCTION);
+    return node->func.args.vector;
+}
 bool node_is_expression_or_parentheses(struct node *node)
 {
     return node->type == NODE_TYPE_EXPRESSION_PARENTHESES || node->type == NODE_TYPE_EXPRESSION;

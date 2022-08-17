@@ -4,15 +4,36 @@
 #include <stdio.h>
 #include <assert.h>
 static struct compile_process* current_process = NULL;
+static struct node* current_function = NULL;
+
+struct history
+{
+    int flags;
+};
+
+static struct history *history_begin(int flags)
+{
+    struct history *history = calloc(1, sizeof(struct history));
+    history->flags = flags;
+    return history;
+}
+
+static struct history *history_down(struct history *history, int flags)
+{
+    struct history *new_history = calloc(1, sizeof(struct history));
+    memcpy(new_history, history, sizeof(struct history));
+    new_history->flags = flags;
+    return new_history;
+}
 
 void codegen_new_scope(int flags)
 {
-    #warning "The resolver needs to exist for this to work"
+    resolver_default_new_scope(current_process->resolver, flags);
 }
 
 void codegen_finish_scope()
 {
-    #warning "You need to invent a resolver for this to work"
+    resolver_default_finish_scope(current_process->resolver);
 }
 
 struct node* codegen_node_next()
@@ -58,6 +79,78 @@ void asm_push_no_nl(const char* ins, ...)
     }
 }
 
+void asm_push_ins_push(const char* fmt, int stack_entity_type, const char* stack_entity_name,...)
+{
+    char tmp_buf[200];
+    sprintf(tmp_buf, "push %s", fmt);
+    va_list args;
+    va_start(args, stack_entity_name);
+    asm_push_args(tmp_buf, args);
+    va_end(args);
+
+    assert(current_function);
+    stackframe_push(current_function, &(struct stack_frame_element){.type=stack_entity_type,.name=stack_entity_name});
+}
+
+int asm_push_ins_pop(const char* fmt, int expecting_stack_entity_type, const char* expecting_stack_entity_name, ...)
+{
+    char tmp_buf[200];
+    sprintf(tmp_buf, "pop %s", fmt);
+    va_list args;
+    va_start(args, expecting_stack_entity_name);
+    asm_push_args(tmp_buf, args);
+    va_end(args);
+
+    assert(current_function);
+    struct stack_frame_element* element = stackframe_back(current_function);
+    int flags = element->flags;
+    stackframe_pop_expecting(current_function, expecting_stack_entity_type, expecting_stack_entity_name);
+    return flags;
+}
+
+void asm_push_ebp()
+{
+    asm_push_ins_push("ebp", STACK_FRAME_ELEMENT_TYPE_SAVED_BP, "function_entry_saved_ebp");
+}
+
+
+void asm_pop_ebp()
+{
+    asm_push_ins_pop("ebp", STACK_FRAME_ELEMENT_TYPE_SAVED_BP, "function_entry_saved_ebp");
+}
+
+
+void codegen_stack_sub_with_name(size_t stack_size, const char* name)
+{
+    if(stack_size != 0)
+    {
+        stackframe_sub(current_function, STACK_FRAME_ELEMENT_TYPE_UNKNOWN, name, stack_size);
+        asm_push("sub esp, %lld", stack_size);
+    }
+}
+void codegen_stack_sub(size_t stack_size)
+{
+    codegen_stack_sub_with_name(stack_size, "literal_stack_change");
+}
+
+void codegen_stack_add_with_name(size_t stack_size, const char* name)
+{
+    if (stack_size != 0)
+    {
+        stackframe_add(current_function, STACK_FRAME_ELEMENT_TYPE_UNKNOWN, name, stack_size);
+        asm_push("add esp, %lld", stack_size);
+    }
+}
+
+void codegen_stack_add(size_t stack_size)
+{
+    codegen_stack_add_with_name(stack_size, "literal_stack_change");
+}
+
+struct resolver_entity* codegen_new_scope_entity(struct node* var_node, int offset, int flags)
+{
+    return resolver_default_new_scope_entity(current_process->resolver, var_node, offset, flags);
+}
 
 const char* codegen_get_label_for_string(const char* str)
 {
@@ -290,9 +383,75 @@ void codegen_generate_data_section()
     }
 }
 
+struct resolver_entity* codegen_register_function(struct node* func_node, int flags)
+{
+    return resolver_default_register_function(current_process->resolver, func_node, flags);
+}
+void codegen_generate_function_prototype(struct node* node)
+{
+    codegen_register_function(node, 0);
+    asm_push("extern %s", node->func.name);
+}
+
+void codegen_generate_function_arguments(struct vector* argument_vector)
+{
+    vector_set_peek_pointer(argument_vector, 0);
+    struct node* current = vector_peek_ptr(argument_vector);
+    while(current)
+    {
+        codegen_new_scope_entity(current, current->var.aoffset, RESOLVER_DEFAULT_ENTITY_FLAG_IS_LOCAL_STACK);
+        current = vector_peek_ptr(argument_vector);
+    }
+}
+
+void codegen_generate_body(struct node* node, struct history* history)
+{
+    #warning "TODO generate the body"
+}
+void codegen_generate_function_with_body(struct node* node)
+{
+    codegen_register_function(node, 0);
+    asm_push("global %s", node->func.name);
+    asm_push("; %s function", node->func.name);
+    asm_push("%s:", node->func.name);
+    
+    asm_push_ebp();
+    asm_push("mov ebp, esp");
+    codegen_stack_sub(C_ALIGN(function_node_stack_size(node)));
+    codegen_new_scope(RESOLVER_DEFAULT_ENTITY_FLAG_IS_LOCAL_STACK);
+    codegen_generate_function_arguments(function_node_argument_vec(node));
+
+    codegen_generate_body(node->func.body_n, history_begin(IS_ALONE_STATEMENT));
+    codegen_finish_scope();
+    codegen_stack_add(C_ALIGN(function_node_stack_size(node)));
+    asm_pop_ebp();
+    stackframe_assert_empty(current_function);
+    asm_push("ret");
+}
+void codegen_generate_function(struct node* node)
+{
+    current_function = node;
+    if (function_node_is_prototype(node))
+    {
+        codegen_generate_function_prototype(node);
+        return;
+    }
+
+    codegen_generate_function_with_body(node);
+}
+
 void codegen_generate_root_node(struct node* node)
 {
-    // PROCESS ANY FUNCTIONS.
+   switch(node->type)
+   {
+      case NODE_TYPE_VARIABLE:
+        // We processed this earlier in data section.
+      break;
+
+      case NODE_TYPE_FUNCTION:
+        codegen_generate_function(node);
+      break;
+   }
 }
 
 void codegen_generate_root()

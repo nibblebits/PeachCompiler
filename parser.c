@@ -79,14 +79,14 @@ int parser_get_pointer_depth();
 void parser_deal_with_additional_expression();
 void parse_for_parentheses(struct history *history);
 
-struct history *history_begin(int flags)
+static struct history *history_begin(int flags)
 {
     struct history *history = calloc(1, sizeof(struct history));
     history->flags = flags;
     return history;
 }
 
-struct history *history_down(struct history *history, int flags)
+static struct history *history_down(struct history *history, int flags)
 {
     struct history *new_history = calloc(1, sizeof(struct history));
     memcpy(new_history, history, sizeof(struct history));
