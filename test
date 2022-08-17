@@ -8,6 +8,9 @@ test:
 push ebp
 mov ebp, esp
 sub esp, 16
+push dword 50
+pop eax
+mov dword [ebp+0], eax
 add esp, 16
 pop ebp
 ret

@@ -264,6 +264,15 @@ bool op_is_address(const char* op)
 }
 
 
+struct datatype datatype_for_numeric()
+{
+    struct datatype dtype = {};
+    dtype.flags |= DATATYPE_FLAG_IS_LITERAL;
+    dtype.type = DATA_TYPE_INTEGER;
+    dtype.type_str = "int";
+    dtype.size = DATA_SIZE_DWORD;
+    return dtype;
+}
 
 void datatype_decrement_pointer(struct datatype* dtype)
 {
