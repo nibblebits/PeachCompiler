@@ -449,7 +449,7 @@ struct resolver_entity *resolver_create_new_entity_for_function_call(struct reso
     return entity;
 }
 
-struct resolver_entity *resolver_regster_function(struct resolver_process *process, struct node *func_node, void *private)
+struct resolver_entity *resolver_register_function(struct resolver_process *process, struct node *func_node, void *private)
 {
     struct resolver_entity *entity = resolver_create_new_entity(NULL, RESOLVER_ENTITY_TYPE_FUNCTION, private);
     if (!entity)
