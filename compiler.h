@@ -1141,6 +1141,11 @@ struct resolver_entity *resolver_new_entity_for_var_node(struct resolver_process
 struct resolver_entity *resolver_register_function(struct resolver_process *process, struct node *func_node, void *private);
 struct resolver_scope *resolver_new_scope(struct resolver_process *resolver, void *private, int flags);
 void resolver_finish_scope(struct resolver_process *resolver);
+struct resolver_result *resolver_follow(struct resolver_process *resolver, struct node *node);
+bool resolver_result_ok(struct resolver_result *result);
+struct resolver_entity *resolver_result_entity_root(struct resolver_result *result);
+struct resolver_entity *resolver_result_entity_next(struct resolver_entity *entity);
+
 bool function_node_is_prototype(struct node* node);
 size_t function_node_stack_size(struct node* node);
 struct vector* function_node_argument_vec(struct node* node);

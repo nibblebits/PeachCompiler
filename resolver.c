@@ -353,7 +353,7 @@ struct resolver_entity *resolver_create_new_cast_entity(struct resolver_process 
 struct resolver_entity *resolver_create_new_entity_for_var_node_custom_scope(struct resolver_process *process, struct node *var_node, void *private, struct resolver_scope *scope, int offset)
 {
     assert(var_node->type == NODE_TYPE_VARIABLE);
-    struct resolver_entity *entity = resolver_create_new_entity(NULL, NODE_TYPE_VARIABLE, private);
+    struct resolver_entity *entity = resolver_create_new_entity(NULL, RESOLVER_ENTITY_TYPE_VARIABLE, private);
     if (!entity)
     {
         return NULL;
@@ -924,6 +924,7 @@ void resolver_push_vector_of_entities(struct resolver_result *result, struct vec
         entity = vector_peek_ptr(vec);
     }
 }
+
 void resolver_execute_rules(struct resolver_process *resolver, struct resolver_result *result)
 {
     struct vector *saved_entities = vector_create(sizeof(struct resolver_entity *));

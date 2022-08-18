@@ -574,10 +574,145 @@ void codegen_generate_scope_variable(struct node* node)
         codegen_generate_assignment_instruction_for_operator(mov_type, codegen_entity_private(entity)->address, reg_to_use, "=", entity->dtype.flags & DATATYPE_FLAG_IS_SIGNED);
     }
 }
+
+void codegen_generate_entity_access_start(struct resolver_result* result, struct resolver_entity* root_assignment_entity, struct history* history)
+{
+    if (root_assignment_entity->type == RESOLVER_ENTITY_TYPE_UNSUPPORTED)
+    {
+        // Unsupported entity then process it.
+        codegen_generate_expressionable(root_assignment_entity->node, history);
+    }
+    else if(result->flags & RESOLVER_RESULT_FLAG_FIRST_ENTITY_PUSH_VALUE)
+    {
+        asm_push_ins_push_with_data("dword [%s]", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype=root_assignment_entity->dtype}, result->base.address);
+    }
+    else if(result->flags & RESOLVER_RESULT_FLAG_FIRST_ENTITY_LOAD_TO_EBX)
+    {
+        if (root_assignment_entity->next && root_assignment_entity->next->flags & RESOLVER_ENTITY_FLAG_IS_POINTER_ARRAY_ENTITY)
+        {
+            asm_push("mov ebx, [%s]", result->base.address);
+        }
+        else
+        {
+            asm_push("lea ebx, [%s]", result->base.address);
+        }
+        asm_push_ins_push_with_data("ebx", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype=root_assignment_entity->dtype});
+    }
+}
+
+void codegen_generate_entity_access_for_variable_or_general(struct resolver_result* result, struct resolver_entity* entity)
+{
+    // Restore the EBX register
+    asm_push_ins_pop("ebx", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value");
+    if (entity->flags & RESOLVER_ENTITY_FLAG_DO_INDIRECTION)
+    {
+        asm_push("mov ebx, [ebx]");
+    }
+    asm_push("add ebx, %i", entity->offset);
+    asm_push_ins_push_with_data("ebx", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype=entity->dtype});
+}
+
+void codegen_generate_entity_access_for_entity_for_assignment_left_operand(struct resolver_result* result, struct resolver_entity* entity, struct history* history)
+{
+    switch(entity->type)
+    {
+        case RESOLVER_ENTITY_TYPE_ARRAY_BRACKET:
+            #warning "todo implement array bracket"
+        break;
+
+        case RESOLVER_ENTITY_TYPE_VARIABLE:
+        case RESOLVER_ENTITY_TYPE_GENERAL:
+            codegen_generate_entity_access_for_variable_or_general(result, entity);
+        break;
+
+        case RESOLVER_ENTITY_TYPE_FUNCTION_CALL:
+            #warning "too function call"
+        break;
+
+        case RESOLVER_ENTITY_TYPE_UNARY_INDIRECTION:
+            #warning "unary indirection"
+        break;
+
+
+        case RESOLVER_ENTITY_TYPE_UNARY_GET_ADDRESS:
+            #warning "unary get address"
+        break;
+
+        case RESOLVER_ENTITY_TYPE_UNSUPPORTED:
+            #warning "unsupported"
+        break;
+
+        case RESOLVER_ENTITY_TYPE_CAST:
+            #warning "cast"
+        break;
+
+        default:
+            compiler_error(current_process, "COMPILER BUG...");
+
+    }
+}
+void codegen_generate_entity_access_for_assignment_left_operand(struct resolver_result* result, struct resolver_entity* root_assignment_entity, struct node* top_most_node, struct history* history)
+{
+    codegen_generate_entity_access_start(result, root_assignment_entity, history);
+    struct resolver_entity* current = resolver_result_entity_next(root_assignment_entity);
+    while(current)
+    {
+        codegen_generate_entity_access_for_entity_for_assignment_left_operand(result, current, history);
+        current = resolver_result_entity_next(current);
+    }
+}
+
+void codegen_generate_assignment_part(struct node* node, const char* op, struct history* history)
+{
+    struct datatype right_operand_dtype;
+    struct resolver_result* result = resolver_follow(current_process->resolver, node);
+    assert(resolver_result_ok(result));
+    struct resolver_entity* root_assignment_entity = resolver_result_entity_root(result);
+    const char* reg_to_use = "eax";
+    const char* mov_type = codegen_byte_word_or_dword_or_ddword(datatype_element_size(&result->last_entity->dtype), &reg_to_use);
+    struct resolver_entity* next_entity = resolver_result_entity_next(root_assignment_entity);
+    if (!next_entity)
+    {
+        if (datatype_is_struct_or_union_non_pointer(&result->last_entity->dtype))
+        {
+            #warning "generate a move struct"
+        }
+        else
+        {
+            asm_push_ins_pop("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value");
+            codegen_generate_assignment_instruction_for_operator(mov_type, result->base.address, reg_to_use, op, result->last_entity->dtype.flags & DATATYPE_FLAG_IS_SIGNED);
+        }
+    }
+    else
+    {
+        codegen_generate_entity_access_for_assignment_left_operand(result, root_assignment_entity, node, history);
+        asm_push_ins_pop("edx", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value");
+        asm_push_ins_pop("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value");
+        codegen_generate_assignment_instruction_for_operator(mov_type, "edx", reg_to_use, op, result->last_entity->flags & DATATYPE_FLAG_IS_SIGNED);
+    }
+
+
+}
+void codegen_generate_assignment_expression(struct node* node, struct history* history)
+{
+    codegen_generate_expressionable(node->exp.right, history_down(history, EXPRESSION_IS_ASSIGNMENT | IS_RIGHT_OPERAND_OF_ASSIGNMENT));
+    codegen_generate_assignment_part(node->exp.left, node->exp.op, history);
+}
+void codegen_generate_exp_node(struct node* node, struct history* history)
+{
+    if (is_node_assignment(node))
+    {
+        codegen_generate_assignment_expression(node, history);
+    }
+}
 void codegen_generate_statement(struct node* node, struct history* history)
 {
     switch(node->type)
     {
+        case NODE_TYPE_EXPRESSION:
+            codegen_generate_exp_node(node, history_begin(history->flags));
+        break;
+
         case NODE_TYPE_VARIABLE:
             codegen_generate_scope_variable(node);
         break;
