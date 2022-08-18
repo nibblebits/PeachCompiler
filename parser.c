@@ -954,6 +954,13 @@ void parser_scope_offset_for_stack(struct node *node, struct history *history)
             variable_node(node)->var.padding = padding(upward_stack ? offset : -offset, node->var.type.size);
         }
     }
+
+    bool first_entity = !last_entity;
+    if (node_is_struct_or_union_variable(node) && variable_struct_or_union_body_node(node)->body.padded)
+    {
+        variable_node(node)->var.padding = padding(upward_stack ? offset : -offset, DATA_SIZE_DWORD);
+    }
+    variable_node(node)->var.aoffset = offset + (upward_stack ? variable_node(node)->var.padding : -variable_node(node)->var.padding);
 }
 
 void parser_scope_offset_for_global(struct node *node, struct history *history)
