@@ -15,11 +15,10 @@ struct pos
     const char *filename;
 };
 
-
 // In C We have a stack alignment of 16 bytes.
 #define C_STACK_ALIGNMENT 16
 #define STACK_PUSH_SIZE 4
-#define C_ALIGN(size) (size % C_STACK_ALIGNMENT) ? size+(C_STACK_ALIGNMENT - (size % C_STACK_ALIGNMENT)) : size
+#define C_ALIGN(size) (size % C_STACK_ALIGNMENT) ? size + (C_STACK_ALIGNMENT - (size % C_STACK_ALIGNMENT)) : size
 
 #define NUMERIC_CASE \
     case '0':        \
@@ -192,27 +191,28 @@ struct codegen_exit_point
     int id;
 };
 
-
 struct string_table_element
 {
     // This is the string that the element is related too. "Hello world"
-    const char* str;
+    const char *str;
 
     // This is the assembly label that points to the memory
     // where the string can be found.
     const char label[50];
 };
 
-
 struct code_generator
 {
     // A vector of struct string_table_element*
-    struct vector* string_table;
+    struct vector *string_table;
 
     // vector of struct codegen_entry_point*
-    struct vector* entry_points;
+    struct vector *entry_points;
     // vector of struct codegen_exit_point*
-    struct vector* exit_points;
+    struct vector *exit_points;
+
+    // vector of struct response*
+    struct vector *responses;
 };
 
 struct resolver_process;
@@ -251,8 +251,8 @@ struct compile_process
     } symbols;
 
     // Pointer to our codegenerator.
-    struct code_generator* generator;
-    struct resolver_process* resolver;
+    struct code_generator *generator;
+    struct resolver_process *resolver;
 };
 
 enum
@@ -352,18 +352,16 @@ struct parsed_switch_case
     int index;
 };
 
-
-
 struct stack_frame_data
 {
     /*
-    * The datatype that was pushed to the stack
-    */
+     * The datatype that was pushed to the stack
+     */
     struct datatype dtype;
 };
 
 struct stack_frame_element
-{   
+{
     // Stack frame element flags
     int flags;
     // The type of frame element
@@ -371,14 +369,13 @@ struct stack_frame_element
     /**
      * The name of the frame element, not a variable name. I.e result_value
      */
-    const char* name;
+    const char *name;
 
     // The offset this element is on the base pointer
     int offset_from_bp;
 
     struct stack_frame_data data;
 };
-
 
 #define STACK_PUSH_SIZE 4
 enum
@@ -398,24 +395,24 @@ enum
     STACK_FRAME_ELEMENT_FLAG_HAS_DATATYPE = 0b00001000,
 };
 
-void stackframe_pop(struct node* func_node);
-struct stack_frame_element* stackframe_back(struct node* func_node);
-struct stack_frame_element* stackframe_back_expect(struct node* func_node, int expecting_type, const char* expecting_name);
-void stackframe_pop_expecting(struct node* func_node, int expecting_type, const char* expecting_name);
-void stackframe_peek_start(struct node* func_node);
-struct stack_frame_element* stackframe_peek(struct node* func_node);
-void stackframe_push(struct node* func_node, struct stack_frame_element* element);
-void stackframe_sub(struct node* func_node, int type, const char* name, size_t amount);
-void stackframe_add(struct node* func_node, int type, const char* name, size_t amount);
-void stackframe_assert_empty(struct node* func_node);
+void stackframe_pop(struct node *func_node);
+struct stack_frame_element *stackframe_back(struct node *func_node);
+struct stack_frame_element *stackframe_back_expect(struct node *func_node, int expecting_type, const char *expecting_name);
+void stackframe_pop_expecting(struct node *func_node, int expecting_type, const char *expecting_name);
+void stackframe_peek_start(struct node *func_node);
+struct stack_frame_element *stackframe_peek(struct node *func_node);
+void stackframe_push(struct node *func_node, struct stack_frame_element *element);
+void stackframe_sub(struct node *func_node, int type, const char *name, size_t amount);
+void stackframe_add(struct node *func_node, int type, const char *name, size_t amount);
+void stackframe_assert_empty(struct node *func_node);
 
 struct node;
 struct unary
 {
     // "*" for pointer access.. **** even for multiple pointer access only the first operator
     // is here
-    const char* op;
-    struct node* operand;
+    const char *op;
+    struct node *operand;
     union
     {
         struct indirection
@@ -424,7 +421,6 @@ struct unary
             int depth;
         } indirection;
     };
-    
 };
 struct node
 {
@@ -561,9 +557,9 @@ struct node
             struct stack_frame
             {
                 // A vector of stack_frame_element
-                struct vector* elements;
+                struct vector *elements;
             } frame;
-            
+
             // The stack size for all variables inside this function.
             size_t stack_size;
         } func;
@@ -692,12 +688,12 @@ struct resolver_process;
 struct resolver_scope;
 struct resolver_entity;
 
-typedef void*(*RESOLVER_NEW_ARRAY_BRACKET_ENTITY)(struct resolver_result* result, struct node* array_entity_node);
-typedef void(*RESOLVER_DELETE_SCOPE)(struct resolver_scope* scope);
-typedef void(*RESOLVER_DELETE_ENTITY)(struct resolver_entity* entity);
-typedef struct resolver_entity*(*RESOLVER_MERGE_ENTITIES)(struct resolver_process* process, struct resolver_result* result, struct resolver_entity* left_entity, struct resolver_entity* right_entity);
-typedef void*(*RESOLVER_MAKE_PRIVATE)(struct resolver_entity* entity, struct node* node, int offset, struct resolver_scope* scope);
-typedef void(*RESOLVER_SET_RESULT_BASE)(struct resolver_result* result, struct resolver_entity* base_entity);
+typedef void *(*RESOLVER_NEW_ARRAY_BRACKET_ENTITY)(struct resolver_result *result, struct node *array_entity_node);
+typedef void (*RESOLVER_DELETE_SCOPE)(struct resolver_scope *scope);
+typedef void (*RESOLVER_DELETE_ENTITY)(struct resolver_entity *entity);
+typedef struct resolver_entity *(*RESOLVER_MERGE_ENTITIES)(struct resolver_process *process, struct resolver_result *result, struct resolver_entity *left_entity, struct resolver_entity *right_entity);
+typedef void *(*RESOLVER_MAKE_PRIVATE)(struct resolver_entity *entity, struct node *node, int offset, struct resolver_scope *scope);
+typedef void (*RESOLVER_SET_RESULT_BASE)(struct resolver_result *result, struct resolver_entity *base_entity);
 struct resolver_callbacks
 {
     RESOLVER_NEW_ARRAY_BRACKET_ENTITY new_array_entity;
@@ -713,17 +709,17 @@ struct resolver_process
 {
     struct resolver_scopes
     {
-        struct resolver_scope* root;
-        struct resolver_scope* current;
+        struct resolver_scope *root;
+        struct resolver_scope *current;
     } scope;
 
-    struct compile_process* compiler;
+    struct compile_process *compiler;
     struct resolver_callbacks callbacks;
 };
 struct resolver_array_data
 {
     // Holds nodes of type resolver_entity
-    struct vector* array_entities;
+    struct vector *array_entities;
 };
 
 enum
@@ -757,7 +753,6 @@ struct resolver_default_entity_data
     int flags;
 };
 
-
 struct resolver_default_scope_data
 {
     int flags;
@@ -778,24 +773,24 @@ enum
 struct resolver_result
 {
     // This is the first entity in our resolver result
-    struct resolver_entity* first_entity_const;
+    struct resolver_entity *first_entity_const;
 
     // This entity represents the variable at the start of this expression.
-    struct resolver_entity* identifier;
+    struct resolver_entity *identifier;
 
     // Equal to the last structure or union entity discovered.
-    struct resolver_entity* last_struct_union_entity;    
+    struct resolver_entity *last_struct_union_entity;
 
     struct resolver_array_data array_data;
 
     // The root entity of our result
-    struct resolver_entity* entity;
+    struct resolver_entity *entity;
     // The last entity of our result.
-    struct resolver_entity* last_entity;
+    struct resolver_entity *last_entity;
     int flags;
     // The total number of entities
     size_t count;
-    
+
     struct resolver_result_base
     {
         // [ebp-4], [name+4]
@@ -805,18 +800,17 @@ struct resolver_result
         // -4
         int offset;
     } base;
-
 };
 struct resolver_scope
 {
     // Resolver scope flags
     int flags;
-    struct vector* entities;
-    struct resolver_scope* next;
-    struct resolver_scope* prev;
+    struct vector *entities;
+    struct resolver_scope *next;
+    struct resolver_scope *prev;
 
     // Private data for the resolver scope.
-    void* private;
+    void *private;
 };
 
 struct resolver_entity
@@ -826,15 +820,15 @@ struct resolver_entity
 
     // The name of the resolved entity
     // i.e function name, variable name ect ect
-    const char* name;
+    const char *name;
 
     // The offset from the stack EBP+(offset)
     int offset;
 
     // This is the node that the entity is relating to.
-    struct node* node;
+    struct node *node;
 
-    union 
+    union
     {
         struct resolver_entity_var_data
         {
@@ -842,7 +836,7 @@ struct resolver_entity
             struct resolver_array_runtime_
             {
                 struct datatype dtype;
-                struct node* index_node;
+                struct node *index_node;
                 int multiplier;
             } array_runtime;
         } var_data;
@@ -850,14 +844,14 @@ struct resolver_entity
         struct resolver_array
         {
             struct datatype dtype;
-            struct node* array_index_node;
+            struct node *array_index_node;
             int index;
         } array;
 
         struct resolver_entity_function_call_data
         {
             // struct node* vector
-            struct vector* arguments;
+            struct vector *arguments;
             // The total bytes used by the function call.
             size_t stack_size;
         } func_call_data;
@@ -885,28 +879,28 @@ struct resolver_entity
     struct entity_last_resolve
     {
 
-        struct node* referencing_node;
+        struct node *referencing_node;
     } last_resolve;
 
     // The datatype of the resolver entity
     struct datatype dtype;
 
     // The scope that this entity belongs to
-    struct resolver_scope* scope;
+    struct resolver_scope *scope;
 
     // The result of the resolution
-    struct resolver_result* result;
+    struct resolver_result *result;
 
     // The resolver process
-    struct resolver_process* resolver;
+    struct resolver_process *resolver;
 
     // Private data that only the resolver entity creator knows about.
-    void* private;
+    void *private;
 
     // The next entity
-    struct resolver_entity* next;
+    struct resolver_entity *next;
     // The previous entity
-    struct resolver_entity* prev;
+    struct resolver_entity *prev;
 };
 enum
 {
@@ -986,9 +980,41 @@ enum
     IS_RIGHT_OPERAND_OF_ASSIGNMENT = 0b100000000000000000000000000000,
     IS_LEFT_OPERAND_OF_ASSIGNMENT = 0b1000000000000000000000000000000,
     EXPRESSION_IS_MODULAS = 0b10000000000000000000000000000000,
-
-
 };
+
+#define EXPRESSION_GEN_MATHABLE (       \
+    EXPRESSION_IS_ADDITION |           \
+    EXPRESSION_IS_SUBTRACTION |        \
+    EXPRESSION_IS_MULTIPLICATION |     \
+    EXPRESSION_IS_DIVISION |           \
+    EXPRESSION_IS_MODULAS |            \
+    EXPRESSION_IS_FUNCTION_CALL |      \
+    EXPRESSION_INDIRECTION |           \
+    EXPRESSION_GET_ADDRESS |           \
+    EXPRESSION_IS_ABOVE |              \
+    EXPRESSION_IS_ABOVE_OR_EQUAL |     \
+    EXPRESSION_IS_BELOW |              \
+    EXPRESSION_IS_BELOW_OR_EQUAL |     \
+    EXPRESSION_IS_EQUAL |              \
+    EXPRESSION_IS_NOT_EQUAL |          \
+    EXPRESSION_LOGICAL_AND |           \
+    EXPRESSION_LOGICAL_OR |            \
+    EXPRESSION_IN_LOGICAL_EXPRESSION | \
+    EXPRESSION_IS_BITSHIFT_LEFT |      \
+    EXPRESSION_IS_BITSHIFT_RIGHT |     \
+    EXPRESSION_IS_BITWISE_OR |         \
+    EXPRESSION_IS_BITWISE_AND |        \
+    EXPRESSION_IS_BITWISE_XOR)
+
+
+#define EXPRESSION_UNINHERITABLE_FLAGS (            \
+      EXPRESSION_FLAG_RIGHT_NODE | EXPRESSION_IN_FUNCTION_CALL_ARGUMENTS | \
+      EXPRESSION_IS_ADDITION | EXPRESSION_IS_MODULAS | EXPRESSION_IS_SUBTRACTION | EXPRESSION_IS_MULTIPLICATION | \
+      EXPRESSION_IS_DIVISION | EXPRESSION_IS_ABOVE | EXPRESSION_IS_ABOVE_OR_EQUAL | \
+      EXPRESSION_IS_BELOW | EXPRESSION_IS_BELOW_OR_EQUAL | EXPRESSION_IS_EQUAL |    \
+      EXPRESSION_IS_NOT_EQUAL | EXPRESSION_LOGICAL_AND | \
+      EXPRESSION_IN_LOGICAL_EXPRESSION | EXPRESSION_IS_BITSHIFT_LEFT | EXPRESSION_IS_BITSHIFT_RIGHT | \
+      EXPRESSION_IS_BITWISE_OR | EXPRESSION_IS_BITWISE_AND | EXPRESSION_IS_BITWISE_XOR | EXPRESSION_IS_ASSIGNMENT | IS_ALONE_STATEMENT)
 
 enum
 {
@@ -1018,9 +1044,8 @@ void *lex_process_private(struct lex_process *process);
 struct vector *lex_process_tokens(struct lex_process *process);
 int lex(struct lex_process *process);
 int parse(struct compile_process *process);
-int codegen(struct compile_process* process);
-struct code_generator* codegenerator_new(struct compile_process* process);
-
+int codegen(struct compile_process *process);
+struct code_generator *codegenerator_new(struct compile_process *process);
 
 /**
  * @brief Builds tokens for the input string.
@@ -1045,7 +1070,7 @@ size_t datatype_element_size(struct datatype *dtype);
 size_t datatype_size_no_ptr(struct datatype *dtype);
 size_t datatype_size(struct datatype *dtype);
 bool datatype_is_primitive(struct datatype *dtype);
-bool datatype_is_struct_or_union_non_pointer(struct datatype* dtype);
+bool datatype_is_struct_or_union_non_pointer(struct datatype *dtype);
 struct datatype datatype_for_numeric();
 
 bool token_is_operator(struct token *token, const char *val);
@@ -1056,15 +1081,15 @@ struct node *node_from_symbol(struct compile_process *current_process, const cha
 bool node_is_expression_or_parentheses(struct node *node);
 bool node_is_value_type(struct node *node);
 bool node_is_expression(struct node *node, const char *op);
-bool node_is_struct_or_union(struct node* node);
+bool node_is_struct_or_union(struct node *node);
 bool is_array_node(struct node *node);
 bool is_node_assignment(struct node *node);
-bool is_unary_operator(const char* op);
-bool op_is_indirection(const char* op);
-bool op_is_address(const char* op);
+bool is_unary_operator(const char *op);
+bool op_is_indirection(const char *op);
+bool op_is_address(const char *op);
 
 struct node *struct_node_for_name(struct compile_process *current_process, const char *name);
-struct node* union_node_for_name(struct compile_process* current_process, const char* name);
+struct node *union_node_for_name(struct compile_process *current_process, const char *name);
 
 void make_tenary_node(struct node *true_node, struct node *false_node);
 
@@ -1082,7 +1107,7 @@ void make_exp_parentheses_node(struct node *exp_node);
 void make_bracket_node(struct node *node);
 void make_body_node(struct vector *body_vec, size_t size, bool padded, struct node *largest_var_node);
 void make_struct_node(const char *name, struct node *body_node);
-void make_union_node(const char* name, struct node* body_node);
+void make_union_node(const char *name, struct node *body_node);
 void make_switch_node(struct node *exp_node, struct node *body_node, struct vector *cases, bool has_default_case);
 void make_function_node(struct datatype *ret_type, const char *name, struct vector *arguments, struct node *body_node);
 void make_while_node(struct node *exp_node, struct node *body_node);
@@ -1091,7 +1116,7 @@ void make_for_node(struct node *init_node, struct node *cond_node, struct node *
 void make_return_node(struct node *exp_node);
 void make_if_node(struct node *cond_node, struct node *body_node, struct node *next_node);
 void make_else_node(struct node *body_node);
-void make_unary_node(const char* op, struct node* operand_node);
+void make_unary_node(const char *op, struct node *operand_node);
 
 struct node *node_pop();
 struct node *node_peek();
@@ -1099,20 +1124,20 @@ struct node *node_peek_or_null();
 void node_push(struct node *node);
 void node_set_vector(struct vector *vec, struct vector *root_vec);
 
-bool is_access_operator(const char* op);
-bool is_access_node(struct node* node);
-bool is_array_operator(const char* op);
-bool is_array_node(struct node* node);
-bool is_parentheses_operator(const char* op);
-bool is_parentheses_node(struct node* node);
-bool is_access_node_with_op(struct node* node, const char* op);
-bool is_argument_operator(const char* op);
-bool is_argument_node(struct node* node);
-void datatype_decrement_pointer(struct datatype* dtype);
-size_t array_brackets_count(struct datatype* dtype);
+bool is_access_operator(const char *op);
+bool is_access_node(struct node *node);
+bool is_array_operator(const char *op);
+bool is_array_node(struct node *node);
+bool is_parentheses_operator(const char *op);
+bool is_parentheses_node(struct node *node);
+bool is_access_node_with_op(struct node *node, const char *op);
+bool is_argument_operator(const char *op);
+bool is_argument_node(struct node *node);
+void datatype_decrement_pointer(struct datatype *dtype);
+size_t array_brackets_count(struct datatype *dtype);
 
 bool node_is_expressionable(struct node *node);
-bool node_valid(struct node* node);
+bool node_valid(struct node *node);
 
 struct node *node_peek_expressionable_or_null();
 bool node_is_struct_or_union_variable(struct node *node);
@@ -1130,10 +1155,9 @@ struct node *variable_node_or_list(struct node *node);
 
 int array_multiplier(struct datatype *dtype, int index, int index_value);
 int array_offset(struct datatype *dtype, int index, int index_value);
-int struct_offset(struct compile_process* compile_proc, const char* struct_name, const char* var_name, struct node** var_node_out, int last_pos, int flags);
-struct node* variable_struct_or_union_largest_variable_node(struct node* var_node);
-struct node* body_largest_variable_node(struct node* body_node);
-
+int struct_offset(struct compile_process *compile_proc, const char *struct_name, const char *var_name, struct node **var_node_out, int last_pos, int flags);
+struct node *variable_struct_or_union_largest_variable_node(struct node *var_node);
+struct node *body_largest_variable_node(struct node *body_node);
 
 struct resolver_entity *resolver_make_entity(struct resolver_process *process, struct resolver_result *result, struct datatype *custom_dtype, struct node *node, struct resolver_entity *guided_entity, struct resolver_scope *scope);
 struct resolver_process *resolver_new_process(struct compile_process *compiler, struct resolver_callbacks *callbacks);
@@ -1146,34 +1170,33 @@ bool resolver_result_ok(struct resolver_result *result);
 struct resolver_entity *resolver_result_entity_root(struct resolver_result *result);
 struct resolver_entity *resolver_result_entity_next(struct resolver_entity *entity);
 
-bool function_node_is_prototype(struct node* node);
-size_t function_node_stack_size(struct node* node);
-struct vector* function_node_argument_vec(struct node* node);
+bool function_node_is_prototype(struct node *node);
+size_t function_node_stack_size(struct node *node);
+struct vector *function_node_argument_vec(struct node *node);
 
-struct resolver_default_entity_data* resolver_default_entity_private(struct resolver_entity* entity);
-struct resolver_default_scope_data* resolver_default_scope_private(struct resolver_scope* scope);
-char* resolver_default_stack_asm_address(int stack_offset, char* out);
-struct resolver_default_entity_data* resolver_default_new_entity_data();
-void resolver_default_global_asm_address(const char* name, int offset, char* address_out);
+struct resolver_default_entity_data *resolver_default_entity_private(struct resolver_entity *entity);
+struct resolver_default_scope_data *resolver_default_scope_private(struct resolver_scope *scope);
+char *resolver_default_stack_asm_address(int stack_offset, char *out);
+struct resolver_default_entity_data *resolver_default_new_entity_data();
+void resolver_default_global_asm_address(const char *name, int offset, char *address_out);
 
-void resolver_default_entity_data_set_address(struct resolver_default_entity_data* entity_data, struct node* var_node, int offset, int flags);
-void* resolver_default_make_private(struct resolver_entity* entity, struct node* node, int offset, struct resolver_scope* scope);
-void resolver_default_set_result_base(struct resolver_result* result, struct resolver_entity* base_entity);
-struct resolver_default_entity_data* resolver_default_new_entity_data_for_var_node(struct node* var_node, int offset, int flags);
-struct resolver_default_entity_data* resolver_default_new_entity_data_for_array_bracket(struct node* breacket_node);
-struct resolver_default_entity_data* resolver_default_new_entity_data_for_function(struct node* func_node, int flags);
-struct resolver_entity* resolver_default_new_scope_entity(struct resolver_process* resolver, struct node* var_node, int offset, int flags);
+void resolver_default_entity_data_set_address(struct resolver_default_entity_data *entity_data, struct node *var_node, int offset, int flags);
+void *resolver_default_make_private(struct resolver_entity *entity, struct node *node, int offset, struct resolver_scope *scope);
+void resolver_default_set_result_base(struct resolver_result *result, struct resolver_entity *base_entity);
+struct resolver_default_entity_data *resolver_default_new_entity_data_for_var_node(struct node *var_node, int offset, int flags);
+struct resolver_default_entity_data *resolver_default_new_entity_data_for_array_bracket(struct node *breacket_node);
+struct resolver_default_entity_data *resolver_default_new_entity_data_for_function(struct node *func_node, int flags);
+struct resolver_entity *resolver_default_new_scope_entity(struct resolver_process *resolver, struct node *var_node, int offset, int flags);
 
-struct resolver_entity* resolver_default_register_function(struct resolver_process* resolver, struct node* func_node, int flags);
+struct resolver_entity *resolver_default_register_function(struct resolver_process *resolver, struct node *func_node, int flags);
 
-void resolver_default_new_scope(struct resolver_process* resolver, int flags);
-void resolver_default_finish_scope(struct resolver_process* resolver);
-void* resolver_default_new_array_entity(struct resolver_result* result, struct node* array_entity_node);
-void resolver_default_delete_entity(struct resolver_entity*  entity);
-void resolver_default_delete_scope(struct resolver_scope* scope);
-struct resolver_entity* resolver_default_merge_entities(struct resolver_process* process, struct resolver_result* result, struct resolver_entity* left_entity, struct resolver_entity* right_entity);
-struct resolver_process* resolver_default_new_process(struct compile_process* compiler);
-
+void resolver_default_new_scope(struct resolver_process *resolver, int flags);
+void resolver_default_finish_scope(struct resolver_process *resolver);
+void *resolver_default_new_array_entity(struct resolver_result *result, struct node *array_entity_node);
+void resolver_default_delete_entity(struct resolver_entity *entity);
+void resolver_default_delete_scope(struct resolver_scope *scope);
+struct resolver_entity *resolver_default_merge_entities(struct resolver_process *process, struct resolver_result *result, struct resolver_entity *left_entity, struct resolver_entity *right_entity);
+struct resolver_process *resolver_default_new_process(struct compile_process *compiler);
 
 /**
  * @brief Gets the variable size from the given variable node
