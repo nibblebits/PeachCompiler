@@ -151,6 +151,12 @@ enum
     COMPILER_FAILED_WITH_ERRORS
 };
 
+enum
+{
+    COMPILE_PROCESS_EXECUTE_NASM = 0b00000001,
+    COMPILE_PROCESS_EXPORT_AS_OBJECT = 0b00000010,
+};
+
 struct scope
 {
     int flags;

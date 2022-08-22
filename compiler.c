@@ -61,5 +61,6 @@ int compile_file(const char* filename, const char* out_filename, int flags)
     
     // Preform code generation..
 
+    fclose(process->ofile);
     return COMPILER_FILE_COMPILED_OK;
 }
