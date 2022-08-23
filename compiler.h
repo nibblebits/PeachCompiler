@@ -1019,7 +1019,7 @@ enum
       EXPRESSION_IS_DIVISION | EXPRESSION_IS_ABOVE | EXPRESSION_IS_ABOVE_OR_EQUAL | \
       EXPRESSION_IS_BELOW | EXPRESSION_IS_BELOW_OR_EQUAL | EXPRESSION_IS_EQUAL |    \
       EXPRESSION_IS_NOT_EQUAL | EXPRESSION_LOGICAL_AND | \
-      EXPRESSION_IN_LOGICAL_EXPRESSION | EXPRESSION_IS_BITSHIFT_LEFT | EXPRESSION_IS_BITSHIFT_RIGHT | \
+      EXPRESSION_IS_BITSHIFT_LEFT | EXPRESSION_IS_BITSHIFT_RIGHT | \
       EXPRESSION_IS_BITWISE_OR | EXPRESSION_IS_BITWISE_AND | EXPRESSION_IS_BITWISE_XOR | EXPRESSION_IS_ASSIGNMENT | IS_ALONE_STATEMENT)
 
 enum
@@ -1080,7 +1080,8 @@ bool datatype_is_struct_or_union_non_pointer(struct datatype *dtype);
 struct datatype datatype_for_numeric();
 struct datatype* datatype_thats_a_pointer(struct datatype* d1, struct datatype* d2);
 struct datatype* datatype_pointer_reduce(struct datatype* datatype, int by);
-
+bool is_logical_operator(const char* op);
+bool is_logical_node(struct node* node);
 
 bool token_is_operator(struct token *token, const char *val);
 

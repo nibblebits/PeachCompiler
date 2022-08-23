@@ -21,9 +21,8 @@ struct response_data
 {
     union
     {
-        struct resolver_entity* resolved_entity;
+        struct resolver_entity *resolved_entity;
     };
-    
 };
 
 struct response
@@ -34,18 +33,18 @@ struct response
 
 void codegen_response_expect()
 {
-    struct response* res = calloc(1, sizeof(struct response));
+    struct response *res = calloc(1, sizeof(struct response));
     vector_push(current_process->generator->responses, &res);
 }
 
-struct response_data* codegen_response_data(struct response* response)
+struct response_data *codegen_response_data(struct response *response)
 {
     return &response->data;
 }
 
-struct response* codegen_response_pull()
+struct response *codegen_response_pull()
 {
-    struct response* res = vector_back_ptr_or_null(current_process->generator->responses);
+    struct response *res = vector_back_ptr_or_null(current_process->generator->responses);
     if (res)
     {
         vector_pop(current_process->generator->responses);
@@ -53,9 +52,9 @@ struct response* codegen_response_pull()
     return res;
 }
 
-void codegen_response_acknowledge(struct response* response_in)
+void codegen_response_acknowledge(struct response *response_in)
 {
-    struct response* res = vector_back_ptr_or_null(current_process->generator->responses);
+    struct response *res = vector_back_ptr_or_null(current_process->generator->responses);
     if (res)
     {
         res->flags |= response_in->flags;
@@ -67,19 +66,31 @@ void codegen_response_acknowledge(struct response* response_in)
     }
 }
 
-bool codegen_response_acknowledged(struct response* res)
+bool codegen_response_acknowledged(struct response *res)
 {
     return res && res->flags && RESPONSE_FLAG_ACKNOWLEDGED;
 }
 
-bool codegen_response_has_entity(struct response* res)
+bool codegen_response_has_entity(struct response *res)
 {
     return codegen_response_acknowledged(res) && res->flags & RESPONSE_FLAG_RESOLVED_ENTITY && res->data.resolved_entity;
 }
 
+struct history_exp
+{
+    const char* logical_start_op;
+    char logical_end_label[20];
+    char logical_end_label_positive[20];
+};
+
 struct history
 {
     int flags;
+    union
+    {
+        struct history_exp exp;
+    };
+    
 };
 
 static struct history *history_begin(int flags)
@@ -284,7 +295,7 @@ struct code_generator *codegenerator_new(struct compile_process *process)
     generator->string_table = vector_create(sizeof(struct string_table_element *));
     generator->entry_points = vector_create(sizeof(struct codegen_entry_point *));
     generator->exit_points = vector_create(sizeof(struct codegen_exit_point *));
-    generator->responses = vector_create(sizeof(struct response*));
+    generator->responses = vector_create(sizeof(struct response *));
     return generator;
 }
 
@@ -507,11 +518,11 @@ bool codegen_is_exp_root(struct history *history)
     return codegen_is_exp_root_for_flags(history->flags);
 }
 
-void codegen_reduce_register(const char* reg, size_t size, bool is_signed)
+void codegen_reduce_register(const char *reg, size_t size, bool is_signed)
 {
     if (size != DATA_SIZE_DWORD)
     {
-        const char* ins = "movsx";
+        const char *ins = "movsx";
         if (!is_signed)
         {
             ins = "movzx";
@@ -519,39 +530,39 @@ void codegen_reduce_register(const char* reg, size_t size, bool is_signed)
         asm_push("%s eax, %s", codegen_sub_register("eax", size));
     }
 }
-void codegen_gen_mem_access(struct node* node, int flags, struct resolver_entity* entity)
+void codegen_gen_mem_access(struct node *node, int flags, struct resolver_entity *entity)
 {
-    #warning "generate & address"
-    #warning "generate structure non pointer access"
+#warning "generate & address"
+#warning "generate structure non pointer access"
 
     if (datatype_element_size(&entity->dtype) != DATA_SIZE_DWORD)
     {
         asm_push("mov eax, [%s]", codegen_entity_private(entity)->address);
         codegen_reduce_register("eax", datatype_element_size(&entity->dtype), entity->dtype.flags & DATATYPE_FLAG_IS_SIGNED);
-        asm_push_ins_push_with_data("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype=entity->dtype});
+        asm_push_ins_push_with_data("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype = entity->dtype});
     }
     else
     {
         // We can push this straight to the stack
-        asm_push_ins_push_with_data("dword [%s]", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype=entity->dtype}, codegen_entity_private(entity)->address);
+        asm_push_ins_push_with_data("dword [%s]", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype = entity->dtype}, codegen_entity_private(entity)->address);
     }
 }
-void codegen_generate_variable_access_for_entity(struct node* node, struct resolver_entity* entity, struct history* history)
+void codegen_generate_variable_access_for_entity(struct node *node, struct resolver_entity *entity, struct history *history)
 {
     codegen_gen_mem_access(node, history->flags, entity);
 }
-void codegen_generate_variable_access(struct node* node, struct resolver_entity* entity, struct history* history)
+void codegen_generate_variable_access(struct node *node, struct resolver_entity *entity, struct history *history)
 {
     codegen_generate_variable_access_for_entity(node, entity, history_down(history, history->flags));
 }
-void codegen_generate_identifier(struct node* node, struct history* history)
+void codegen_generate_identifier(struct node *node, struct history *history)
 {
-    struct resolver_result* result = resolver_follow(current_process->resolver, node);
+    struct resolver_result *result = resolver_follow(current_process->resolver, node);
     assert(resolver_result_ok(result));
 
-    struct resolver_entity* entity = resolver_result_entity(result);
+    struct resolver_entity *entity = resolver_result_entity(result);
     codegen_generate_variable_access(node, entity, history);
-    codegen_response_acknowledge(&(struct response){.flags=RESPONSE_FLAG_RESOLVED_ENTITY,.data.resolved_entity=entity});
+    codegen_response_acknowledge(&(struct response){.flags = RESPONSE_FLAG_RESOLVED_ENTITY, .data.resolved_entity = entity});
 }
 void codegen_generate_expressionable(struct node *node, struct history *history)
 {
@@ -874,7 +885,7 @@ bool codegen_resolve_node_return_result(struct node *node, struct history *histo
         {
             *result_out = result;
         }
-        codegen_response_acknowledge(&(struct response){.flags=RESPONSE_FLAG_RESOLVED_ENTITY, .data.resolved_entity=result->last_entity});
+        codegen_response_acknowledge(&(struct response){.flags = RESPONSE_FLAG_RESOLVED_ENTITY, .data.resolved_entity = result->last_entity});
         return true;
     }
 
@@ -889,12 +900,12 @@ bool codegen_resolve_node_for_value(struct node *node, struct history *history)
         return false;
     }
 
-    #warning "MORE TO GO FOR RESOLVING NODE VALUE"
+#warning "MORE TO GO FOR RESOLVING NODE VALUE"
 
     return true;
 }
 
-int get_additional_flags(int current_flags, struct node* node)
+int get_additional_flags(int current_flags, struct node *node)
 {
     if (node->type != NODE_TYPE_EXPRESSION)
     {
@@ -910,86 +921,86 @@ int get_additional_flags(int current_flags, struct node* node)
     return additional_flags;
 }
 
-int codegen_set_flag_for_operator(const char* op)
+int codegen_set_flag_for_operator(const char *op)
 {
     int flag = 0;
     if (S_EQ(op, "+"))
     {
         flag |= EXPRESSION_IS_ADDITION;
     }
-    else if(S_EQ(op, "-"))
+    else if (S_EQ(op, "-"))
     {
         flag |= EXPRESSION_IS_SUBTRACTION;
     }
-    else if(S_EQ(op, "*"))
+    else if (S_EQ(op, "*"))
     {
         flag |= EXPRESSION_IS_MULTIPLICATION;
     }
-    else if(S_EQ(op, "/"))
+    else if (S_EQ(op, "/"))
     {
         flag |= EXPRESSION_IS_DIVISION;
     }
-    else if(S_EQ(op, "%"))
+    else if (S_EQ(op, "%"))
     {
         flag |= EXPRESSION_IS_MODULAS;
     }
-    else if(S_EQ(op, ">"))
+    else if (S_EQ(op, ">"))
     {
         flag |= EXPRESSION_IS_ABOVE;
     }
-    else if(S_EQ(op, "<"))
+    else if (S_EQ(op, "<"))
     {
         flag |= EXPRESSION_IS_BELOW;
     }
-    else if(S_EQ(op, ">="))
+    else if (S_EQ(op, ">="))
     {
         flag |= EXPRESSION_IS_ABOVE_OR_EQUAL;
     }
-    else if(S_EQ(op, "<="))
+    else if (S_EQ(op, "<="))
     {
         flag |= EXPRESSION_IS_BELOW_OR_EQUAL;
     }
-    else if(S_EQ(op, "!="))
+    else if (S_EQ(op, "!="))
     {
         flag |= EXPRESSION_IS_NOT_EQUAL;
     }
-    else if(S_EQ(op, "=="))
+    else if (S_EQ(op, "=="))
     {
         flag |= EXPRESSION_IS_EQUAL;
     }
-    else if(S_EQ(op, "&&"))
+    else if (S_EQ(op, "&&"))
     {
         flag |= EXPRESSION_LOGICAL_AND;
     }
-    else if(S_EQ(op, "<<"))
+    else if (S_EQ(op, "<<"))
     {
         flag |= EXPRESSION_IS_BITSHIFT_LEFT;
     }
-    else if(S_EQ(op, ">>"))
+    else if (S_EQ(op, ">>"))
     {
         flag |= EXPRESSION_IS_BITSHIFT_RIGHT;
     }
-    else if(S_EQ(op, "&"))
+    else if (S_EQ(op, "&"))
     {
         flag |= EXPRESSION_IS_BITWISE_AND;
     }
-    else if(S_EQ(op, "|"))
+    else if (S_EQ(op, "|"))
     {
         flag |= EXPRESSION_IS_BITWISE_OR;
     }
-    else if(S_EQ(op, "^"))
+    else if (S_EQ(op, "^"))
     {
         flag |= EXPRESSION_IS_BITWISE_XOR;
     }
     return flag;
 }
 
-struct stack_frame_element* asm_stack_back()
+struct stack_frame_element *asm_stack_back()
 {
     return stackframe_back(current_function);
 }
 
-struct stack_frame_element* asm_stack_peek()
+struct stack_frame_element *asm_stack_peek()
 {
     return stackframe_peek(current_function);
 }
@@ -999,9 +1010,9 @@ void asm_stack_peek_start()
     stackframe_peek_start(current_function);
 }
 
-bool asm_datatype_back(struct datatype* dtype_out)
+bool asm_datatype_back(struct datatype *dtype_out)
 {
-    struct stack_frame_element* last_stack_frame_element = asm_stack_back();
+    struct stack_frame_element *last_stack_frame_element = asm_stack_back();
     if (!last_stack_frame_element)
     {
         return false;
@@ -1021,24 +1032,24 @@ bool codegen_can_gen_math(int flags)
     return flags & EXPRESSION_GEN_MATHABLE;
 }
 
-void codegen_gen_cmp(const char* value, const char* set_ins)
+void codegen_gen_cmp(const char *value, const char *set_ins)
 {
     asm_push("cmp eax, %s", value);
     asm_push("%s al", set_ins);
     asm_push("movzx eax, al");
 }
 
-void codegen_gen_math_for_value(const char* reg, const char* value, int flags, bool is_signed)
+void codegen_gen_math_for_value(const char *reg, const char *value, int flags, bool is_signed)
 {
     if (flags & EXPRESSION_IS_ADDITION)
     {
         asm_push("add %s, %s", reg, value);
     }
-    else if(flags & EXPRESSION_IS_SUBTRACTION)
+    else if (flags & EXPRESSION_IS_SUBTRACTION)
     {
         asm_push("sub %s, %s", reg, value);
     }
-    else if(flags & EXPRESSION_IS_MULTIPLICATION)
+    else if (flags & EXPRESSION_IS_MULTIPLICATION)
     {
         asm_push("mov ecx, %s", value);
         if (is_signed)
@@ -1050,7 +1061,7 @@ void codegen_gen_math_for_value(const char* reg, const char* value, int flags, b
             asm_push("mul ecx");
         }
     }
-    else if(flags & EXPRESSION_IS_DIVISION)
+    else if (flags & EXPRESSION_IS_DIVISION)
     {
         asm_push("mov ecx, %s", value);
         asm_push("cdq");
@@ -1063,7 +1074,7 @@ void codegen_gen_math_for_value(const char* reg, const char* value, int flags, b
             asm_push("div ecx");
         }
     }
-    else if(flags & EXPRESSION_IS_MODULAS)
+    else if (flags & EXPRESSION_IS_MODULAS)
     {
         asm_push("mov ecx, %s", value);
         asm_push("cdq");
@@ -1078,66 +1089,140 @@ void codegen_gen_math_for_value(const char* reg, const char* value, int flags, b
 
         asm_push("mov eax, edx");
     }
-    else if(flags & EXPRESSION_IS_ABOVE)
+    else if (flags & EXPRESSION_IS_ABOVE)
     {
         codegen_gen_cmp(value, "setg");
     }
-    else if(flags & EXPRESSION_IS_BELOW)
+    else if (flags & EXPRESSION_IS_BELOW)
     {
         codegen_gen_cmp(value, "setl");
     }
-    else if(flags & EXPRESSION_IS_EQUAL)
+    else if (flags & EXPRESSION_IS_EQUAL)
     {
         codegen_gen_cmp(value, "sete");
     }
-    else if(flags & EXPRESSION_IS_ABOVE_OR_EQUAL)
+    else if (flags & EXPRESSION_IS_ABOVE_OR_EQUAL)
     {
         codegen_gen_cmp(value, "setge");
     }
-    else if(flags & EXPRESSION_IS_BELOW_OR_EQUAL)
+    else if (flags & EXPRESSION_IS_BELOW_OR_EQUAL)
     {
         codegen_gen_cmp(value, "setle");
     }
-    else if(flags & EXPRESSION_IS_NOT_EQUAL)
+    else if (flags & EXPRESSION_IS_NOT_EQUAL)
     {
         codegen_gen_cmp(value, "setne");
     }
-    else if(flags & EXPRESSION_IS_BITSHIFT_LEFT)
+    else if (flags & EXPRESSION_IS_BITSHIFT_LEFT)
     {
         value = codegen_sub_register(value, DATA_SIZE_BYTE);
         asm_push("sal %s, %s", reg, value);
     }
-    else if(flags & EXPRESSION_IS_BITSHIFT_RIGHT)
+    else if (flags & EXPRESSION_IS_BITSHIFT_RIGHT)
     {
         value = codegen_sub_register(value, DATA_SIZE_BYTE);
         asm_push("sar %s, %s", reg, value);
     }
-    else if(flags & EXPRESSION_IS_BITWISE_AND)
+    else if (flags & EXPRESSION_IS_BITWISE_AND)
     {
         asm_push("and %s, %s", reg, value);
     }
-    else if(flags & EXPRESSION_IS_BITWISE_OR)
+    else if (flags & EXPRESSION_IS_BITWISE_OR)
     {
         asm_push("or %s, %s", reg, value);
     }
-    else if(flags & EXPRESSION_IS_BITWISE_XOR)
+    else if (flags & EXPRESSION_IS_BITWISE_XOR)
     {
         asm_push("xor %s, %s", reg, value);
     }
+}
+
+void codegen_setup_new_logical_expression(struct history* history, struct node* node)
+{
+    int label_index = codegen_label_count();
+    sprintf(history->exp.logical_end_label, ".endc_%i", label_index);
+    sprintf(history->exp.logical_end_label_positive, ".endc_%i_positive", label_index);
+    history->exp.logical_start_op = node->exp.op;
+    history->flags |= EXPRESSION_IN_LOGICAL_EXPRESSION;
+}
+
+void codegen_generate_logical_cmp_and(const char* reg, const char* fail_label)
+{
+    asm_push("cmp %s, 0", reg);
+    asm_push("je %s", fail_label);
+}
+
+void codegen_generate_logical_cmp_or(const char* reg, const char* equal_label)
+{
+    asm_push("cmp %s, 0", reg);
+    asm_push("jg %s", equal_label);
+}
+
+void codegen_generate_logical_cmp(const char* op, const char* fail_label, const char* equal_label)
+{
+    if (S_EQ(op, "&&"))
+    {
+        codegen_generate_logical_cmp_and("eax", fail_label);
+    }
+    else if(S_EQ(op, "||"))
+    {
+        codegen_generate_logical_cmp_or("eax", equal_label);
+    }
+}
+void codegen_generate_end_labels_for_logical_expression(const char* op, const char* end_label, const char* end_label_positive)
+{
+    if (S_EQ(op, "&&"))
+    {
+        asm_push("; && END CLAUSE");
+        asm_push("mov eax, 1");
+        asm_push("jmp %s", end_label_positive);
+        asm_push("%s:", end_label);
+        asm_push("xor eax, eax");
+        asm_push("%s:", end_label_positive);
+    }
+    else if(S_EQ(op, "||"))
+    {
+        asm_push("; || END CLAUSE");
+        asm_push("jmp %s", end_label);
+        asm_push("%s:", end_label_positive);
+        asm_push("mov eax, 1");
+        asm_push("%s:", end_label);
+    }
+}
+void codegen_generate_exp_node_for_logical_arithmetic(struct node *node, struct history *history)
+{
+    bool start_of_logical_exp = !(history->flags & EXPRESSION_IN_LOGICAL_EXPRESSION);
+    if (start_of_logical_exp)
+    {
+        codegen_setup_new_logical_expression(history, node);
+    }
+    codegen_generate_expressionable(node->exp.left, history_down(history, history->flags | EXPRESSION_IN_LOGICAL_EXPRESSION));
+    asm_push_ins_pop("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value");
+    codegen_generate_logical_cmp(node->exp.op, history->exp.logical_end_label, history->exp.logical_end_label_positive);
+    codegen_generate_expressionable(node->exp.right, history_down(history, history->flags | EXPRESSION_IN_LOGICAL_EXPRESSION));
+    if (!is_logical_node(node->exp.right))
+    {
+        asm_push_ins_pop("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value");
+        codegen_generate_logical_cmp(node->exp.op, history->exp.logical_end_label, history->exp.logical_end_label_positive);
+        codegen_generate_end_labels_for_logical_expression(node->exp.op, history->exp.logical_end_label, history->exp.logical_end_label_positive);
+        asm_push_ins_push("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value");
+    }
 
 }
-void codegen_generate_exp_node_for_arithmetic(struct node* node, struct history* history)
+
+void codegen_generate_exp_node_for_arithmetic(struct node *node, struct history *history)
 {
     assert(node->type == NODE_TYPE_EXPRESSION);
     int flags = history->flags;
 
-    // if (is_logical_operator(node->exp.op))
-    // {
-    //     codegen_generate_exp_node_for_logical_arithmetic
-    // }
+    if (is_logical_operator(node->exp.op))
+    {
+        codegen_generate_exp_node_for_logical_arithmetic(node, history);
+        return;
+    }
 
-    struct node* left_node = node->exp.left;
-    struct node* right_node = node->exp.right;
+    struct node *left_node = node->exp.left;
+    struct node *right_node = node->exp.right;
     int op_flags = codegen_set_flag_for_operator(node->exp.op);
     codegen_generate_expressionable(left_node, history_down(history, flags));
     codegen_generate_expressionable(right_node, history_down(history, flags));
@@ -1156,10 +1241,10 @@ void codegen_generate_exp_node_for_arithmetic(struct node* node, struct history*
         struct datatype left_dtype = datatype_for_numeric();
         asm_datatype_back(&left_dtype);
         asm_push_ins_pop("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value");
-        struct datatype* pointer_datatype = datatype_thats_a_pointer(&left_dtype, &right_dtype);
+        struct datatype *pointer_datatype = datatype_thats_a_pointer(&left_dtype, &right_dtype);
         if (pointer_datatype && datatype_size(datatype_pointer_reduce(pointer_datatype, 1)) > DATA_SIZE_BYTE)
         {
-            const char* reg = "ecx";
+            const char *reg = "ecx";
             if (pointer_datatype == &right_dtype)
             {
                 reg = "eax";
@@ -1170,7 +1255,7 @@ void codegen_generate_exp_node_for_arithmetic(struct node* node, struct history*
         codegen_gen_math_for_value("eax", "ecx", op_flags, last_dtype.flags & DATATYPE_FLAG_IS_SIGNED);
     }
 
-    asm_push_ins_push_with_data("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype=last_dtype});
+    asm_push_ins_push_with_data("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype = last_dtype});
 }
 
 int codegen_remove_uninheritable_flags(int flags)

@@ -22,6 +22,16 @@ struct datatype* datatype_thats_a_pointer(struct datatype* d1, struct datatype* 
     return NULL;
 }
 
+bool is_logical_operator(const char* op)
+{
+    return S_EQ(op, "&&") || S_EQ(op, "||");
+}
+
+bool is_logical_node(struct node* node)
+{
+    return node->type == NODE_TYPE_EXPRESSION && is_logical_operator(node->exp.op);
+}
+
 struct datatype* datatype_pointer_reduce(struct datatype* datatype, int by)
 {
     struct datatype* new_datatype = calloc(1, sizeof(struct datatype));
