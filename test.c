@@ -1,6 +1,6 @@
 int main()
 {
-    int b = 50;
-    int e = 20;
-    b = e + 10;
+    int* kk;
+    int* bb;
+    bb = kk + 1;
 }
