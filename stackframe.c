@@ -35,7 +35,7 @@ void stackframe_pop_expecting(struct node* func_node, int expecting_type, const 
 void stackframe_peek_start(struct node* func_node)
 {
     struct stack_frame* frame = &func_node->func.frame;
-    vector_set_peek_pointer(frame->elements, 0);
+    vector_set_peek_pointer_end(frame->elements);
     vector_set_flag(frame->elements, VECTOR_FLAG_PEEK_DECREMENT);
 }
 
