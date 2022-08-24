@@ -1,11 +1,15 @@
-int test(int a)
+struct dog
 {
+    int a;
+    int b;
+    int e;
+    char kk;
+};
 
-}
-
+struct dog a;
 int main()
 {
-    int b = 0;
+    int e;
+    a.kk = 10;
 
-    test(50);
 }
