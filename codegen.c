@@ -1758,6 +1758,20 @@ void codegen_generate_while_stmt(struct node* node)
     asm_push(".while_end_%i:", while_end_id);
     codegen_end_entry_exit_point();
 }
+
+void codegen_generate_do_while_stmt(struct node* node)
+{
+    codegen_begin_entry_exit_point();
+    int do_while_start_id = codegen_label_count();
+    asm_push(".do_while_start_%i:", do_while_start_id);
+    codegen_generate_body(node->stmt.do_while_stmt.body_node, history_begin(IS_ALONE_STATEMENT));
+    codegen_generate_expressionable(node->stmt.do_while_stmt.exp_node, history_begin(0));
+    asm_push_ins_pop("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value");
+    asm_push("cmp eax, 0");
+    asm_push("jne .do_while_start_%i", do_while_start_id);
+    codegen_end_entry_exit_point();
+}
+
 void codegen_generate_statement(struct node *node, struct history *history)
 {
     switch (node->type)
@@ -1783,6 +1797,10 @@ void codegen_generate_statement(struct node *node, struct history *history)
 
     case NODE_TYPE_STATEMENT_WHILE:
         codegen_generate_while_stmt(node);
+        break;
+
+    case NODE_TYPE_STATEMENT_DO_WHILE:
+        codegen_generate_do_while_stmt(node);
         break;
 
     }
