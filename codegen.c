@@ -360,6 +360,7 @@ struct code_generator *codegenerator_new(struct compile_process *process)
     generator->entry_points = vector_create(sizeof(struct codegen_entry_point *));
     generator->exit_points = vector_create(sizeof(struct codegen_exit_point *));
     generator->responses = vector_create(sizeof(struct response *));
+    generator->_switch.swtiches = vector_create(sizeof(struct generator_switch_stmt_entity));
     return generator;
 }
 
@@ -455,6 +456,45 @@ void codegen_end_entry_exit_point()
     codegen_end_exit_point();
 }
 
+void codegen_begin_switch_statement()
+{
+    struct code_generator* generator = current_process->generator;
+    struct generator_switch_stmt* switch_stmt_data = &generator->_switch;
+    vector_push(switch_stmt_data->swtiches, &switch_stmt_data->current);
+    memset(&switch_stmt_data->current, 0, sizeof(struct generator_switch_stmt_entity));
+    int switch_stmt_id = codegen_label_count();
+    asm_push(".switch_stmt_%i:", switch_stmt_id);
+    switch_stmt_data->current.id = switch_stmt_id;
+}
+
+void codegen_end_switch_statement()
+{
+    struct code_generator* generator = current_process->generator;
+    struct generator_switch_stmt* switch_stmt_data = &generator->_switch;
+    asm_push(".switch_stmt_%i_end:", switch_stmt_data->current.id);
+    // Lets restore the older switch statement
+    memcpy(&switch_stmt_data->current, vector_back(switch_stmt_data->swtiches), sizeof(struct generator_switch_stmt_entity));
+    vector_pop(switch_stmt_data->swtiches);
+}
+
+int codegen_switch_id()
+{
+    struct code_generator* generator = current_process->generator;
+    struct generator_switch_stmt* switch_stmt_data = &generator->_switch;
+    return switch_stmt_data->current.id;
+}
+
+void codegen_begin_case_statement(int index)
+{
+    struct code_generator* generator = current_process->generator;
+    struct generator_switch_stmt* switch_stmt_data = &generator->_switch;
+    asm_push(".switch_stmt_%i_case_%i:", switch_stmt_data->current.id, index);
+}
+
+void codegen_end_case_statement()
+{
+    // Do nothing.
+}
 static const char *asm_keyword_for_size(size_t size, char *tmp_buf)
 {
     const char *keyword = NULL;
