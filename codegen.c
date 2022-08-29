@@ -1927,6 +1927,15 @@ void codegen_generate_switch_stmt(struct node* node)
     codegen_end_entry_exit_point();
 }
 
+void codegen_generate_switch_case_stmt(struct node* node)
+{
+    struct node* case_stmt_exp = node->stmt._case.exp;
+    assert(case_stmt_exp->type == NODE_TYPE_NUMBER);
+    codegen_begin_case_statement(case_stmt_exp->llnum);
+    asm_push("; CASE %i", case_stmt_exp->llnum);
+    codegen_end_case_statement();
+}
+
 void codegen_generate_break_stmt(struct node* node)
 {
     codegen_goto_exit_point(node);
@@ -1982,6 +1991,14 @@ void codegen_generate_statement(struct node *node, struct history *history)
 
     case NODE_TYPE_STATEMENT_SWITCH:
         codegen_generate_switch_stmt(node);
+        break;
+
+    case NODE_TYPE_STATEMENT_CASE:
+        codegen_generate_switch_case_stmt(node);
+        break;
+
+    case NODE_TYPE_STATEMENT_DEFAULT:
+        codegen_generate_switch_default_stmt(node);
         break;
 
     }

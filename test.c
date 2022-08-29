@@ -1,16 +1,16 @@
 
 int main()
 {
-    int x = 3;
+    int x = 1;
     switch(x)
     {
-        case 3:
+        case 1:
             x = 90;
         break;
-
-        case 1:
-            x = 20;
+        case 2:
+            x = 100;
         break;
+    
     }
     return x;
 }

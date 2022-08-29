@@ -1649,6 +1649,13 @@ void parse_keyword_parentheses_expression(const char *keyword)
     expect_sym(')');
 }
 
+void parse_default(struct history* history)
+{
+    expect_keyword("default");
+    expect_sym(':');
+    make_default_node();
+    history->_switch.case_data.has_default_case = true;
+}
 void parse_case(struct history *history)
 {
     expect_keyword("case");
@@ -1662,7 +1669,7 @@ void parse_case(struct history *history)
         compiler_error(current_process, "We only support numbers in our subset of C at this time\n");
     }
 
-    struct node *case_node = node_pop();
+    struct node *case_node = node_peek();
     parser_register_case(history, case_node);
 }
 void parse_switch(struct history *history)
@@ -1885,6 +1892,11 @@ void parse_keyword(struct history *history)
     else if (S_EQ(token->sval, "case"))
     {
         parse_case(history);
+        return;
+    }
+    else if(S_EQ(token->sval, "default"))
+    {
+        parse_default(history);
         return;
     }
 

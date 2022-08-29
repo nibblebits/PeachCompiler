@@ -55,6 +55,10 @@ struct node *node_peek_expressionable_or_null()
     return node_is_expressionable(last_node) ? last_node : NULL;
 }
 
+void make_default_node()
+{
+    node_create(&(struct node){.type=NODE_TYPE_STATEMENT_DEFAULT});
+}
 void make_cast_node(struct datatype *dtype, struct node *operand_node)
 {
     node_create(&(struct node){.type = NODE_TYPE_CAST, .cast.dtype = *dtype, .cast.operand = operand_node});
