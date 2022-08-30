@@ -313,6 +313,17 @@ struct datatype datatype_for_numeric()
     return dtype;
 }
 
+struct datatype datatype_for_string()
+{
+    struct datatype dtype = {};
+    dtype.type = DATA_TYPE_INTEGER;
+    dtype.type_str = "char";
+    dtype.flags |= DATATYPE_FLAG_IS_POINTER | DATATYPE_FLAG_IS_LITERAL;
+    dtype.pointer_depth = 1;
+    dtype.size = DATA_SIZE_DWORD;
+    return dtype;
+}
+
 void datatype_decrement_pointer(struct datatype* dtype)
 {
     dtype->pointer_depth--;

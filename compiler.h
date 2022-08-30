@@ -1090,6 +1090,7 @@ size_t datatype_size(struct datatype *dtype);
 bool datatype_is_primitive(struct datatype *dtype);
 bool datatype_is_struct_or_union_non_pointer(struct datatype *dtype);
 struct datatype datatype_for_numeric();
+struct datatype datatype_for_string();
 struct datatype* datatype_thats_a_pointer(struct datatype* d1, struct datatype* d2);
 struct datatype* datatype_pointer_reduce(struct datatype* datatype, int by);
 bool is_logical_operator(const char* op);
