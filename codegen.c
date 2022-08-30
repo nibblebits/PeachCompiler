@@ -1951,6 +1951,11 @@ void codegen_generate_goto_stmt(struct node* node)
     asm_push("jmp label_%s", node->stmt._goto.label->sval);
 }
 
+void codegen_generate_label(struct node* node)
+{
+    asm_push("label_%s:", node->label.name->sval);
+}
+
 void codegen_generate_statement(struct node *node, struct history *history)
 {
     switch (node->type)
@@ -2008,6 +2013,10 @@ void codegen_generate_statement(struct node *node, struct history *history)
 
     case NODE_TYPE_STATEMENT_GOTO:
         codegen_generate_goto_stmt(node);
+        break;
+
+    case NODE_TYPE_LABEL:
+        codegen_generate_label(node);
         break;
 
     }
