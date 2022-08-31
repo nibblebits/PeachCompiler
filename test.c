@@ -4,4 +4,5 @@ int main()
 {
     int x;
     abc[1] = 50;
+    return abc[1];
 }

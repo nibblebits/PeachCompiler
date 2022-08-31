@@ -350,9 +350,7 @@ void parser_reorder_expression(struct node **node_out)
         }
     }
 
-    if ((is_array_node(node->exp.left) || is_node_assignment(node->exp.right)) ||
-        ((node_is_expression(node->exp.left, "()")) &&
-         node_is_expression(node->exp.right, ",")))
+    if ((is_array_node(node->exp.left) && is_node_assignment(node->exp.right)) || ((node_is_expression(node->exp.left, "()") || node_is_expression(node->exp.left, "[]")) && node_is_expression(node->exp.right, ",")))
     {
         parser_node_move_right_left_to_left(node);
     }
@@ -541,7 +539,7 @@ void parse_for_cast()
 }
 int parse_exp(struct history *history)
 {
-    
+
     if (S_EQ(token_peek_next()->sval, "("))
     {
         parse_for_parentheses(history);
@@ -1430,7 +1428,6 @@ void parse_union(struct datatype *dtype)
     {
         parser_scope_new();
         resolver_default_new_scope(current_process->resolver, 0);
-
     }
     parse_union_no_scope(dtype, is_forward_declaration);
 
@@ -1650,7 +1647,7 @@ void parse_keyword_parentheses_expression(const char *keyword)
     expect_sym(')');
 }
 
-void parse_default(struct history* history)
+void parse_default(struct history *history)
 {
     expect_keyword("default");
     expect_sym(':');
@@ -1895,7 +1892,7 @@ void parse_keyword(struct history *history)
         parse_case(history);
         return;
     }
-    else if(S_EQ(token->sval, "default"))
+    else if (S_EQ(token->sval, "default"))
     {
         parse_default(history);
         return;
@@ -1959,13 +1956,13 @@ void parse_keyword_for_global()
 {
     parse_keyword(history_begin(HISTORY_FLAG_IS_GLOBAL_SCOPE));
     struct node *node = node_pop();
-    switch(node->type)
+    switch (node->type)
     {
-        case NODE_TYPE_VARIABLE:
-        case NODE_TYPE_FUNCTION:
-        case NODE_TYPE_STRUCT:
-        case NODE_TYPE_UNION:
-            symresolver_build_for_node(current_process, node);
+    case NODE_TYPE_VARIABLE:
+    case NODE_TYPE_FUNCTION:
+    case NODE_TYPE_STRUCT:
+    case NODE_TYPE_UNION:
+        symresolver_build_for_node(current_process, node);
         break;
     }
     node_push(node);
