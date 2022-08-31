@@ -826,6 +826,11 @@ void codegen_generate_string(struct node* node, struct history* history)
     asm_push_ins_push_with_data("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype=datatype_for_string()});
 }
 
+void codegen_generate_exp_parenthesis_node(struct node* node, struct history* history)
+{
+    codegen_generate_expressionable(node->parenthesis.exp, history_down(history, codegen_remove_uninheritable_flags(history->flags)));
+}
+
 void codegen_generate_expressionable(struct node *node, struct history *history)
 {
     bool is_root = codegen_is_exp_root(history);
@@ -848,6 +853,10 @@ void codegen_generate_expressionable(struct node *node, struct history *history)
         break;
     case NODE_TYPE_EXPRESSION:
         codegen_generate_exp_node(node, history);
+        break;
+
+    case NODE_TYPE_EXPRESSION_PARENTHESES:
+        codegen_generate_exp_parenthesis_node(node, history);
         break;
 
     case NODE_TYPE_UNARY:
