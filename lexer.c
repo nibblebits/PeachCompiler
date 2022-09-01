@@ -18,6 +18,8 @@ bool lex_is_in_expression();
 static struct lex_process *lex_process;
 static struct token tmp_token;
 
+char lex_get_escaped_char(char c);
+
 static char peekc()
 {
     return lex_process->function->peek_char(lex_process);
@@ -132,6 +134,29 @@ struct token *token_make_number()
     return token_make_number_for_value(read_number());
 }
 
+static void lex_handle_escape_number(struct buffer* buf)
+{
+    long long number = read_number();
+    if (number > 255)
+    {
+        compiler_error(lex_process->compiler, "Characters must be 0-255 wide chars are not yet supported\n");
+    }
+
+    buffer_write(buf, number);
+}
+static void lex_handle_escape(struct buffer* buf)
+{
+    char c = peekc();
+    if (isdigit(c))
+    {
+        lex_handle_escape_number(buf);
+        return;
+    }
+
+    char co = lex_get_escaped_char(c);
+    buffer_write(buf, co);
+    nextc();
+}
 static struct token *token_make_string(char start_delim, char end_delim)
 {
     struct buffer *buf = buffer_create();
@@ -142,6 +167,7 @@ static struct token *token_make_string(char start_delim, char end_delim)
         if (c == '\\')
         {
             // We need to handle an escape character.
+            lex_handle_escape(buf);
             continue;
         }
 
