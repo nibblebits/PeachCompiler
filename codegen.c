@@ -620,6 +620,9 @@ void codegen_generate_global_variable(struct node *node)
         compiler_error(current_process, "Doubles and floats are not supported in our subset of C\n");
         break;
     }
+
+    assert(node->type == NODE_TYPE_VARIABLE);
+    codegen_new_scope_entity(node, 0, 0);
 }
 
 void codegen_generate_struct(struct node* node)
