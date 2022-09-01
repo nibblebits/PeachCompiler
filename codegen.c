@@ -641,6 +641,18 @@ void codegen_generate_union(struct node* node)
         codegen_generate_global_variable(node->_union.var);
     }
 }
+
+void codegen_generate_global_variable_list(struct node* var_list_node)
+{
+    assert(var_list_node->type == NODE_TYPE_VARIABLE_LIST);
+    vector_set_peek_pointer(var_list_node->var_list.list, 0);
+    struct node* var_node = vector_peek_ptr(var_list_node->var_list.list);
+    while(var_node)
+    {
+        codegen_generate_global_variable(var_node);
+        var_node = vector_peek_ptr(var_list_node->var_list.list);
+    }
+}
 void codegen_generate_data_section_part(struct node *node)
 {
     switch (node->type)
@@ -649,6 +661,9 @@ void codegen_generate_data_section_part(struct node *node)
         codegen_generate_global_variable(node);
         break;
 
+    case NODE_TYPE_VARIABLE_LIST:
+        codegen_generate_global_variable_list(node);
+        break;
     case NODE_TYPE_STRUCT:
         codegen_generate_struct(node);
         break;
@@ -2117,6 +2132,17 @@ void codegen_generate_label(struct node* node)
 }
 
 
+void codegen_generate_scope_variable_for_list(struct node* var_list_node)
+{
+    assert(var_list_node->type == NODE_TYPE_VARIABLE_LIST);
+    vector_set_peek_pointer(var_list_node->var_list.list, 0);
+    struct node* var_node = vector_peek_ptr(var_list_node->var_list.list);
+    while(var_node)
+    {
+        codegen_generate_scope_variable(var_node);
+        var_node = vector_peek_ptr(var_list_node->var_list.list);
+    }   
+}
 void codegen_generate_statement(struct node *node, struct history *history)
 {
     switch (node->type)
@@ -2133,6 +2159,9 @@ void codegen_generate_statement(struct node *node, struct history *history)
         codegen_generate_scope_variable(node);
         break;
 
+    case NODE_TYPE_VARIABLE_LIST:
+        codegen_generate_scope_variable_for_list(node);
+        break;
     case NODE_TYPE_STATEMENT_IF:
         codegen_generate_if_stmt(node);
         break;
