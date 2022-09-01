@@ -217,6 +217,8 @@ bool op_valid(const char *op)
            S_EQ(op, "-=") ||
            S_EQ(op, "*=") ||
            S_EQ(op, "/=") ||
+           S_EQ(op, ">>=") ||
+           S_EQ(op, "<<=") ||
            S_EQ(op, ">>") ||
            S_EQ(op, "<<") ||
            S_EQ(op, ">=") ||
@@ -262,15 +264,25 @@ const char *read_op()
     char op = nextc();
     struct buffer *buffer = buffer_create();
     buffer_write(buffer, op);
-
-    if (!op_treated_as_one(op))
+    if (op == '*' && peekc() == '=')
     {
-        op = peekc();
-        if (is_single_operator(op))
+        // *= so it  may be that * is a single operator but we will give it a special use case.
+        buffer_write(buffer, peekc());
+        // Skip "=" as we just peeked at it.
+        nextc();
+        single_operator = false;
+    }
+    else if (!op_treated_as_one(op))
+    {
+        for (int i = 0; i < 2; i++)
         {
-            buffer_write(buffer, op);
-            nextc();
-            single_operator = false;
+            op = peekc();
+            if (is_single_operator(op))
+            {
+                buffer_write(buffer, op);
+                nextc();
+                single_operator = false;
+            }
         }
     }
 
