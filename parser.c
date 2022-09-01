@@ -364,7 +364,7 @@ bool parser_is_unary_operator(const char *op)
 void parse_for_indirection_unary()
 {
     int depth = parser_get_pointer_depth();
-    parse_expressionable(history_begin(0));
+    parse_expressionable(history_begin(EXPRESSION_IS_UNARY));
     struct node *unary_operand_node = node_pop();
     make_unary_node("*", unary_operand_node);
 
@@ -376,7 +376,7 @@ void parse_for_indirection_unary()
 void parse_for_normal_unary()
 {
     const char *unary_op = token_next()->sval;
-    parse_expressionable(history_begin(0));
+    parse_expressionable(history_begin(EXPRESSION_IS_UNARY));
     struct node *unary_operand_node = node_pop();
     make_unary_node(unary_op, unary_operand_node);
 }
@@ -539,6 +539,11 @@ void parse_for_cast()
 }
 int parse_exp(struct history *history)
 {
+
+    if (history->flags & EXPRESSION_IS_UNARY && !unary_operand_compatible(token_peek_next()))
+    {
+        return -1;
+    }
 
     if (S_EQ(token_peek_next()->sval, "("))
     {
@@ -1929,8 +1934,7 @@ int parse_expressionable_single(struct history *history)
         break;
 
     case TOKEN_TYPE_OPERATOR:
-        parse_exp(history);
-        res = 0;
+        res = parse_exp(history);
         break;
 
     case TOKEN_TYPE_KEYWORD:

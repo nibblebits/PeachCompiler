@@ -324,6 +324,17 @@ struct datatype datatype_for_string()
     return dtype;
 }
 
+bool is_parentheses(const char* op)
+{
+    return (S_EQ(op, "("));
+}
+
+bool unary_operand_compatible(struct token* token)
+{
+    return is_access_operator(token->sval) ||
+            is_array_operator(token->sval) ||
+            is_parentheses(token->sval);
+}
 void datatype_decrement_pointer(struct datatype* dtype)
 {
     dtype->pointer_depth--;

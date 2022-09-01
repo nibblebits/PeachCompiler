@@ -1141,7 +1141,8 @@ void make_return_node(struct node *exp_node);
 void make_if_node(struct node *cond_node, struct node *body_node, struct node *next_node);
 void make_else_node(struct node *body_node);
 void make_unary_node(const char *op, struct node *operand_node);
-
+bool is_parentheses(const char* op);
+bool unary_operand_compatible(struct token* token);
 struct node *node_pop();
 struct node *node_peek();
 struct node *node_peek_or_null();
