@@ -2175,7 +2175,7 @@ void codegen_generate_switch_stmt_case_jumps(struct node *node)
 
     if (node->stmt.switch_stmt.has_default_case)
     {
-        asm_push("jmp .switch_stmt_%i_case_default", codegen_switch_id);
+        asm_push("jmp .switch_stmt_%i_case_default", codegen_switch_id());
         return;
     }
 
