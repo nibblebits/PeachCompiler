@@ -178,9 +178,9 @@ void make_if_node(struct node *cond_node, struct node *body_node, struct node *n
     node_create(&(struct node){.type = NODE_TYPE_STATEMENT_IF, .stmt.if_stmt.cond_node = cond_node, .stmt.if_stmt.body_node = body_node, .stmt.if_stmt.next = next_node});
 }
 
-void make_unary_node(const char* op, struct node* operand_node)
+void make_unary_node(const char* op, struct node* operand_node, int flags)
 {
-    node_create(&(struct node){.type=NODE_TYPE_UNARY,.unary.op=op, .unary.operand=operand_node});
+    node_create(&(struct node){.type=NODE_TYPE_UNARY,.unary.op=op, .unary.operand=operand_node, .unary.flags=flags});
 }
 
 struct node *node_from_sym(struct symbol *sym)

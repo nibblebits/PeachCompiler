@@ -424,9 +424,15 @@ void stackframe_sub(struct node *func_node, int type, const char *name, size_t a
 void stackframe_add(struct node *func_node, int type, const char *name, size_t amount);
 void stackframe_assert_empty(struct node *func_node);
 
+enum
+{
+    UNARY_FLAG_IS_LEFT_OPERANDED_UNARY = 0b00000001,
+};
+
 struct node;
 struct unary
 {
+    int flags;
     // "*" for pointer access.. **** even for multiple pointer access only the first operator
     // is here
     const char *op;
@@ -1140,7 +1146,8 @@ void make_for_node(struct node *init_node, struct node *cond_node, struct node *
 void make_return_node(struct node *exp_node);
 void make_if_node(struct node *cond_node, struct node *body_node, struct node *next_node);
 void make_else_node(struct node *body_node);
-void make_unary_node(const char *op, struct node *operand_node);
+void make_unary_node(const char* op, struct node* operand_node, int flags);
+bool is_left_operanded_unary_operator(const char* op);
 bool is_parentheses(const char* op);
 bool unary_operand_compatible(struct token* token);
 struct node *node_pop();

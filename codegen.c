@@ -130,6 +130,8 @@ void codegen_generate_expressionable(struct node *node, struct history *history)
 int codegen_label_count();
 void codegen_generate_body(struct node *node, struct history *history);
 int codegen_remove_uninheritable_flags(int flags);
+void codegen_generate_assignment_part(struct node *node, const char *op, struct history *history);
+
 void codegen_new_scope(int flags)
 {
     resolver_default_new_scope(current_process->resolver, flags);
@@ -848,6 +850,45 @@ void codegen_generate_normal_unary(struct node *node, struct history *history)
     {
         codegen_generate_unary_indirection(node, history);
     }
+    else if (S_EQ(node->unary.op, "++"))
+    {
+        if (node->unary.flags & UNARY_FLAG_IS_LEFT_OPERANDED_UNARY)
+        {
+            // a++
+            asm_push_ins_push_with_data("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype = last_dtype});
+            asm_push("inc eax");
+            asm_push_ins_push_with_data("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype = last_dtype});
+            codegen_generate_assignment_part(node->unary.operand, "=", history);
+        }
+        else
+        {
+            // ++a
+            asm_push("inc eax");
+            asm_push_ins_push_with_data("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype = last_dtype});
+            codegen_generate_assignment_part(node->unary.operand, "=", history);
+            asm_push_ins_push_with_data("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype = last_dtype});
+        }
+    }
+    else if (S_EQ(node->unary.op, "--"))
+    {
+        if (node->unary.flags & UNARY_FLAG_IS_LEFT_OPERANDED_UNARY)
+        {
+            // a--
+            asm_push_ins_push_with_data("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype = last_dtype});
+            asm_push("dec eax");
+            asm_push_ins_push_with_data("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype = last_dtype});
+            codegen_generate_assignment_part(node->unary.operand, "=", history);
+        }
+        else
+        {
+            // --a
+            asm_push("dec eax");
+            asm_push_ins_push_with_data("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype = last_dtype});
+            codegen_generate_assignment_part(node->unary.operand, "=", history);
+            asm_push_ins_push_with_data("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype = last_dtype});
+        }
+    }
+
 }
 void codegen_generate_unary(struct node *node, struct history *history)
 {
@@ -1751,7 +1792,6 @@ void codegen_gen_math_for_value(const char *reg, const char *value, int flags, b
         {
             asm_push("shr %s, %s", reg, value);
         }
-
     }
     else if (flags & EXPRESSION_IS_BITWISE_AND)
     {

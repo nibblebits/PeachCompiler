@@ -289,7 +289,7 @@ bool is_argument_node(struct node* node)
 
 bool is_unary_operator(const char* op)
 {
-    return S_EQ(op, "-") || S_EQ(op, "!") || S_EQ(op, "~") || S_EQ(op, "*") || S_EQ(op, "&");
+    return S_EQ(op, "-") || S_EQ(op, "!") || S_EQ(op, "~") || S_EQ(op, "*") || S_EQ(op, "&") || S_EQ(op, "++") || S_EQ(op, "--");
 }
 
 bool op_is_indirection(const char* op)
@@ -327,6 +327,11 @@ struct datatype datatype_for_string()
 bool is_parentheses(const char* op)
 {
     return (S_EQ(op, "("));
+}
+
+bool is_left_operanded_unary_operator(const char* op)
+{
+    return S_EQ(op, "++") || S_EQ(op, "--");
 }
 
 bool unary_operand_compatible(struct token* token)
