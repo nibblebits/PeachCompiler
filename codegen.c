@@ -723,7 +723,7 @@ bool codegen_is_exp_root(struct history *history)
 
 void codegen_reduce_register(const char *reg, size_t size, bool is_signed)
 {
-    if (size != DATA_SIZE_DWORD)
+    if (size != DATA_SIZE_DWORD && size > 0)
     {
         const char *ins = "movsx";
         if (!is_signed)
@@ -1550,7 +1550,16 @@ bool codegen_resolve_node_for_value(struct node *node, struct history *history)
 
     struct datatype dtype;
     assert(asm_datatype_back(&dtype));
-    if (datatype_is_struct_or_union_non_pointer(&dtype))
+    if (result->flags & RESOLVER_RESULT_FLAG_DOES_GET_ADDRESS)
+    {
+        // Do nothing
+    }
+    else if(result->last_entity->type == RESOLVER_ENTITY_TYPE_FUNCTION_CALL && 
+        datatype_is_struct_or_union_non_pointer(&result->last_entity->dtype))
+        {
+            // Do nothing.
+        }
+    else if (datatype_is_struct_or_union_non_pointer(&dtype))
     {
         codegen_generate_structure_push(result->last_entity, history, 0);
     }
