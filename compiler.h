@@ -86,6 +86,11 @@ enum
     NUMBER_TYPE_DOUBLE
 };
 
+enum
+{
+    TOKEN_FLAG_IS_CUSTOM_OPERATOR = 0b00000001
+};
+
 struct token
 {
     int type;
