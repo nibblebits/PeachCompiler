@@ -1111,6 +1111,7 @@ bool is_logical_operator(const char* op);
 bool is_logical_node(struct node* node);
 
 bool token_is_operator(struct token *token, const char *val);
+bool is_operator_token(struct token* token);
 
 struct node *node_create(struct node *_node);
 struct node *node_from_sym(struct symbol *sym);
@@ -1347,6 +1348,7 @@ struct expressionable_config
         EXPRESSIONABLE_HANDLE_NUMBER handle_number_callback;
         EXPRESSIONABLE_HANDLE_IDENTIFIER handle_identifier_callback;
         EXPRESSIONABLE_MAKE_EXPRESSION_NODE make_expression_node;
+        EXPRESSIONABLE_MAKE_PARENTHESES_NODE make_parentheses_node;
         EXPRESSIONABLE_MAKE_UNARY_NODE make_unary_node;
         EXPRESSIONABLE_MAKE_UNARY_INDIRECTION_NODE make_unary_indirection_node;
         EXPRESSIONABLE_MAKE_TENARY_NODE make_tenary_node;

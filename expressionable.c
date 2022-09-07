@@ -207,6 +207,65 @@ void expressionable_parser_reorder_expression(struct expressionable *expressiona
         }
     }
 }
+
+bool expressionable_generic_type_is_value_expressionable(int type)
+{
+    return type == EXPRESSIONABLE_GENERIC_TYPE_NUMBER ||
+            type == EXPRESSIONABLE_GENERIC_TYPE_IDENTIFIER ||
+            type == EXPRESSIONABLE_GENERIC_TYPE_UNARY ||
+            type == EXPRESSIONABLE_GENERIC_TYPE_PARENTHESES ||
+            type == EXPRESSIONABLE_GENERIC_TYPE_EXPRESSION;
+}
+
+void expressionable_expect_op(struct expressionable* expressionable, const char* op)
+{
+    struct token* next_token = expressionable_token_next(expressionable);
+    if (next_token == NULL || !token_is_operator(next_token, op))
+    {
+        expressionable_error(expressionable, "Expecting a certain operator but something else was provided\n");
+    }
+}
+
+void expressionable_expect_sym(struct expressionable* expressionable, char c)
+{
+    struct token* next_token = expressionable_token_next(expressionable);
+    if (next_token && !token_is_symbol(next_token, c))
+    {
+        expressionable_error(expressionable, "Expecting a different symbol than was provided");
+    }
+}
+
+void expressionable_deal_with_additional_expression(struct expressionable* expressionable)
+{
+    if (is_operator_token(expressionable_peek_next(expressionable)))
+    {
+        expressionable_parse(expressionable);
+    }
+}
+void expressionable_parse_parentheses(struct expressionable* expressionable)
+{
+    void* left_node = NULL;
+    void* tmp_node = expressionable_node_peek_or_null(expressionable);
+    int tmp_type = tmp_node ? expressionable_callbacks(expressionable)->get_node_type(expressionable, tmp_node) : -1;
+    if (tmp_node && expressionable_generic_type_is_value_expressionable(tmp_type))
+    {
+        left_node = tmp_node;
+        expressionable_node_pop(expressionable);
+    }
+
+    expressionable_expect_op(expressionable, "(");
+    expressionable_parse(expressionable);
+    expressionable_expect_sym(expressionable, ')');
+    void* exp_node = expressionable_node_pop(expressionable);
+    expressionable_callbacks(expressionable)->make_parentheses_node(expressionable, exp_node);
+    if (left_node)
+    {
+        void* parentheses_node = expressionable_node_pop(expressionable);
+        expressionable_callbacks(expressionable)->make_expression_node(expressionable, left_node, parentheses_node, "()");
+    }
+    expressionable_deal_with_additional_expression(expressionable);
+
+}
 void expressionable_parse_for_operator(struct expressionable *expressionable)
 {
     struct token *op_token = expressionable_peek_next(expressionable);
@@ -228,8 +287,7 @@ void expressionable_parse_for_operator(struct expressionable *expressionable)
     {
         if (S_EQ(expressionable_peek_next(expressionable)->sval, "("))
         {
-#warning "parse for parentheses
-            // expressionable_parse_parentheses()
+            expressionable_parse_parentheses(expressionable);
         }
         else if (is_unary_operator(expressionable_peek_next(expressionable)->sval))
         {
@@ -256,7 +314,11 @@ void expressionable_parse_for_operator(struct expressionable *expressionable)
 
 int expressionable_parse_exp(struct expressionable *expressionable, struct token *token)
 {
-#warning "parse parenteheses"
+    if (S_EQ(expressionable_peek_next(expressionable)->sval, "("))
+    {
+        expressionable_parse_parentheses(expressionable);
+    }
+
 #warning "parse tenary"
 
     expressionable_parse_for_operator(expressionable);
@@ -298,8 +360,7 @@ int expressionable_parse_single_with_flags(struct expressionable *expressionable
     if (expressionable_callbacks(expressionable)->is_custom_operator(expressionable, token))
     {
         token->flags |= TOKEN_FLAG_IS_CUSTOM_OPERATOR;
-#warning "Come back and implement parse_exp"
-        // expressionable_parse_exp(expressionable, token);
+        expressionable_parse_exp(expressionable, token);
     }
     else
     {
