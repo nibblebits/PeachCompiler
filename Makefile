@@ -1,4 +1,4 @@
-OBJECTS= ./build/compiler.o ./build/cprocess.o ./build/rdefault.o ./build/lexer.o ./build/token.o ./build/lex_process.o ./build/parser.o ./build/scope.o ./build/symresolver.o ./build/codegen.o ./build/stackframe.o ./build/resolver.o ./build/fixup.o ./build/array.o ./build/datatype.o ./build/node.o ./build/expressionable.o ./build/helper.o ./build/helpers/buffer.o ./build/helpers/vector.o 
+OBJECTS= ./build/compiler.o ./build/cprocess.o ./build/rdefault.o ./build/lexer.o ./build/token.o ./build/lex_process.o ./build/parser.o ./build/scope.o ./build/symresolver.o ./build/codegen.o ./build/stackframe.o ./build/resolver.o ./build/fixup.o ./build/array.o ./build/datatype.o ./build/node.o ./build/expressionable.o ./build/helper.o ./build/helpers/buffer.o ./build/helpers/vector.o ./build/preprocessor.o
 INCLUDES= -I./
 
 all: ${OBJECTS}
@@ -59,6 +59,11 @@ all: ${OBJECTS}
 
 ./build/datatype.o: ./datatype.c
 	gcc datatype.c ${INCLUDES} -o ./build/datatype.o -g -c
+
+
+./build/preprocessor.o: ./preprocessor/preprocessor.c
+	gcc ./preprocessor/preprocessor.c ${INCLUDES} -o ./build/preprocessor.o -g -c
+
 
 ./build/helpers/buffer.o: ./helpers/buffer.c
 	gcc ./helpers/buffer.c ${INCLUDES} -o ./build/helpers/buffer.o -g -c
