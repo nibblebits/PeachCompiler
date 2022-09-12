@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "compiler.h"
 #include "helpers/vector.h"
-struct compile_process *compile_process_create(const char *filename, const char *filename_out, int flags)
+struct compile_process *compile_process_create(const char *filename, const char *filename_out, int flags, struct compile_process* parent_process)
 {
     FILE *file = fopen(filename, "r");
     if (!file)
@@ -21,6 +21,8 @@ struct compile_process *compile_process_create(const char *filename, const char 
     }
 
     struct compile_process* process = calloc(1, sizeof(struct compile_process));
+    process->token_vec = vector_create(sizeof(struct token));
+    process->token_vec_original = vector_create(sizeof(struct token));
     process->node_vec = vector_create(sizeof(struct node*));
     process->node_tree_vec = vector_create(sizeof(struct node*));
     
@@ -33,6 +35,17 @@ struct compile_process *compile_process_create(const char *filename, const char 
     symresolver_initialize(process);
     symresolver_new_table(process);
     
+    if (parent_process)
+    {
+        process->preprocessor = parent_process->preprocessor;
+        process->include_dirs = parent_process->include_dirs;
+    }
+    else
+    {
+        process->preprocessor = preprocessor_create(process);
+        process->include_dirs = vector_create(sizeof(const char*));
+        // setup default include dirs...
+    }
     return process;
 }
 
