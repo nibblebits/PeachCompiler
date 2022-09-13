@@ -309,6 +309,7 @@ struct preprocessor_definition
         } native;;
     };
     
+    struct preprocessor* preprocessor;
 };
 
 struct preprocessor_included_file
