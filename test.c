@@ -1,4 +1,1 @@
-int main()
-{
-    return 50;
-}
+#define ABC(x, y)

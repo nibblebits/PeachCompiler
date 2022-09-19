@@ -29,6 +29,7 @@ struct vector *vector_create_no_saves(size_t esize)
     vector->pindex = 0;
     vector->esize = esize;
     vector->count = 0;
+    return vector;
 }
 
 size_t vector_total_size(struct vector *vector)
