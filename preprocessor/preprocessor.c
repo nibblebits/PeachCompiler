@@ -505,6 +505,16 @@ bool preprocessor_token_is_ifdef(struct token* token)
     return (S_EQ(token->sval, "ifdef"));
 }
 
+bool preprocessor_token_is_ifndef(struct token* token)
+{
+    if (!preprocessor_token_is_preprocessor_keyword(token))
+    {
+        return false;
+    }
+
+    return (S_EQ(token->sval, "ifndef"));
+}
+
 struct buffer* preprocessor_multi_value_string(struct compile_process* compiler)
 {
     struct buffer* buffer = buffer_create();
@@ -772,7 +782,7 @@ void preprocessor_handle_ifdef_token(struct compile_process* compiler)
     struct token* condition_token = preprocessor_next_token(compiler);
     if (!condition_token)
     {
-        compiler_error(compiler, "No condition token was provided.");
+        compiler_error(compiler, "No condition token was provided.\n");
     }
 
     struct preprocessor_definition* definition = preprocessor_get_definition(compiler->preprocessor, condition_token->sval);
@@ -781,6 +791,18 @@ void preprocessor_handle_ifdef_token(struct compile_process* compiler)
     preprocessor_read_to_end_if(compiler, definition != NULL);
 }
 
+
+void preprocessor_handle_ifndef_token(struct compile_process* compiler)
+{
+    struct token* condition_token = preprocessor_next_token(compiler);
+    if (!condition_token)
+    {
+        compiler_error(compiler, "No condition token was provided\n");
+    }
+    struct preprocessor_definition* definition = preprocessor_get_definition(compiler->preprocessor, condition_token->sval);
+    preprocessor_read_to_end_if(compiler, definition == NULL);
+
+}
 int preprocessor_handle_hashtag_token(struct compile_process* compiler, struct token* token)
 {
     bool is_preprocessed = false;
@@ -809,6 +831,11 @@ int preprocessor_handle_hashtag_token(struct compile_process* compiler, struct t
     else if(preprocessor_token_is_ifdef(next_token))
     {
         preprocessor_handle_ifdef_token(compiler);
+        is_preprocessed = true;
+    }
+    else if(preprocessor_token_is_ifndef(next_token))
+    {
+        preprocessor_handle_ifndef_token(compiler);
         is_preprocessed = true;
     }
 
