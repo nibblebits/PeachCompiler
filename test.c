@@ -1,3 +1,4 @@
-#define ABC(x, y)
-#undef ABC
-#error "hello world"
+
+#ifdef ABC
+#error "testing"
+#endif
