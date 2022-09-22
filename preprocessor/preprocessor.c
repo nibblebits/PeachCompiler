@@ -776,7 +776,32 @@ void preprocessor_read_to_end_if(struct compile_process* compiler, bool true_cla
         }
     }
 }
+int preprocessor_evaluate_number(struct preprocessor_node* node)
+{
+    return node->const_val.llnum;
+}
 
+int preprocessor_evaluate(struct compile_process* compiler, struct preprocessor_node* root_node)
+{
+    struct preprocessor_node* current = root_node;
+    int result = 0;
+    switch(current->type)
+    {
+        case PREPROCESSOR_NUMBER_NODE:
+            result = preprocessor_evaluate_number(current);
+        break;
+    }
+    return result;
+}
+
+int preprocessor_parse_evaluate(struct compile_process* compiler, struct vector* token_vec)
+{
+    struct vector* node_vector = vector_create(sizeof(struct preprocessor_node*));
+    struct expressionable* expressionable = expressionable_create(&preprocessor_expressionable_config, token_vec, node_vector, 0);
+    expressionable_parse(expressionable);
+    struct preprocessor_node* root_node = expressionable_node_pop(expressionable);
+    return preprocessor_evaluate(compiler, root_node);
+}
 void preprocessor_handle_ifdef_token(struct compile_process* compiler)
 {
     struct token* condition_token = preprocessor_next_token(compiler);
@@ -803,6 +828,7 @@ void preprocessor_handle_ifndef_token(struct compile_process* compiler)
     preprocessor_read_to_end_if(compiler, definition == NULL);
 
 }
+
 int preprocessor_handle_hashtag_token(struct compile_process* compiler, struct token* token)
 {
     bool is_preprocessed = false;
