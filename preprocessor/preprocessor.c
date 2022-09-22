@@ -495,6 +495,16 @@ bool preprocessor_token_is_error(struct token* token)
     return (S_EQ(token->sval, "error"));
 }
 
+bool preprocessor_token_is_if(struct token* token)
+{
+    if (!preprocessor_token_is_preprocessor_keyword(token))
+    {
+        return false;
+    }
+
+    return (S_EQ(token->sval, "if"));
+}
+
 bool preprocessor_token_is_ifdef(struct token* token)
 {
     if(!preprocessor_token_is_preprocessor_keyword(token))
@@ -802,6 +812,13 @@ int preprocessor_parse_evaluate(struct compile_process* compiler, struct vector*
     struct preprocessor_node* root_node = expressionable_node_pop(expressionable);
     return preprocessor_evaluate(compiler, root_node);
 }
+
+void preprocessor_handle_if_token(struct compile_process* compiler)
+{
+    int result = preprocessor_parse_evaluate(compiler, compiler->token_vec_original);
+    preprocessor_read_to_end_if(compiler, result > 0);
+}
+
 void preprocessor_handle_ifdef_token(struct compile_process* compiler)
 {
     struct token* condition_token = preprocessor_next_token(compiler);
@@ -853,6 +870,11 @@ int preprocessor_handle_hashtag_token(struct compile_process* compiler, struct t
     {
         preprocessor_handle_error_token(compiler);
         is_preprocessed = true;
+    }
+    else if(preprocessor_token_is_if(next_token))
+    {
+        preprocessor_handle_if_token(compiler);
+        is_preprocessed = true;   
     }
     else if(preprocessor_token_is_ifdef(next_token))
     {

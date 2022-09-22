@@ -1,5 +1,3 @@
-
-#define ABC 1
-#ifndef ABC
-#error "testing"
+#if 0
+#error "hello"
 #endif
