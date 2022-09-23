@@ -98,6 +98,8 @@ struct preprocessor_node
 };
 
 void preprocessor_handle_token(struct compile_process* compiler, struct token* token);
+int preprocessor_parse_evaluate(struct compile_process* compiler, struct vector* token_vec);
+int preprocessor_evaluate(struct compile_process* compiler, struct preprocessor_node* root_node);
 
 void preprocessor_execute_warning(struct compile_process* compiler, const char* msg)
 {
@@ -627,6 +629,69 @@ struct preprocessor_definition* preprocessor_get_definition(struct preprocessor*
 }
 
 
+struct vector* preprocessor_definition_value_for_standard(struct preprocessor_definition* definition)
+{
+    return definition->standard.value;
+}
+
+struct vector* preprocessor_definition_value_with_arguments(struct preprocessor_definition* definition, struct preprocessor_function_arguments* arguments)
+{
+    if (definition->type == PREPROCESSOR_DEFINITION_NATIVE_CALLBACK)
+    {
+        #warning "implement definition value for native.
+        return NULL;
+    }
+    else if(definition->type == PREPROCESSOR_DEFINITION_TYPEDEF)
+    {
+        #warning "preprocessor definition typedef"
+        return NULL;
+    }
+
+    return preprocessor_definition_value_for_standard(definition);
+
+}
+struct vector* preprocessor_definition_value(struct preprocessor_definition* definition)
+{
+    return preprocessor_definition_value_with_arguments(definition, NULL);
+}
+
+int preprocessor_parse_evaluate_token(struct compile_process* compiler, struct token* token)
+{
+    struct vector* token_vec = vector_create(sizeof(struct token));
+    vector_push(token_vec, token);
+    return preprocessor_parse_evaluate(compiler, token_vec);
+}
+
+int preprocessor_definition_evaluated_value_for_standard(struct preprocessor_definition* definition)
+{
+    struct token* token = vector_back(definition->standard.value);
+    if (token->type == TOKEN_TYPE_IDENTIFIER)
+    {
+        return preprocessor_parse_evaluate_token(definition->preprocessor->compiler, token);
+    }
+
+    if (token->type != TOKEN_TYPE_NUMBER)
+    {
+        compiler_error(definition->preprocessor->compiler, "The definition must hold a number value. Unable to use macro IF");
+    }
+    return token->llnum;
+}
+
+int preprocessor_definition_evaluated_value(struct preprocessor_definition* definition, struct preprocessor_function_arguments* arguments)
+{
+    if (definition->type == PREPROCESSOR_DEFINITION_STANDARD)
+    {
+        return preprocessor_definition_evaluated_value_for_standard(definition);
+    }
+    else if(definition->type == PREPROCESSOR_DEFINITION_NATIVE_CALLBACK)
+    {
+        #warning "implement native callbacks.
+        return -1;
+    }
+    
+    compiler_error(definition->preprocessor->compiler, "The definition cannot be evaluated into a number");
+
+}
 bool preprocessor_is_next_macro_arguments(struct compile_process* compiler)
 {
     bool res = false;
@@ -791,6 +856,32 @@ int preprocessor_evaluate_number(struct preprocessor_node* node)
     return node->const_val.llnum;
 }
 
+int preprocessor_evaluate_identifier(struct compile_process* compiler, struct preprocessor_node* node)
+{
+    struct preprocessor* preprocessor = compiler->preprocessor;
+    struct preprocessor_definition* definition = preprocessor_get_definition(preprocessor, node->sval);
+    if (!definition)
+    {
+        return true;
+    }
+
+    if (vector_count(preprocessor_definition_value(definition)) > 1)
+    {
+        struct vector* node_vector = vector_create(sizeof(struct preprocessor_node*));
+        struct expressionable* expressionable = expressionable_create(&preprocessor_expressionable_config, preprocessor_definition_value(definition), node_vector, EXPRESSIONABLE_FLAG_IS_PREPROCESSOR_EXPRESSION);
+        expressionable_parse(expressionable);
+        struct preprocessor_node* node = expressionable_node_pop(expressionable);
+        int val = preprocessor_evaluate(compiler, node);
+        return val;
+    }
+
+    if (vector_count(preprocessor_definition_value(definition)) == 0)
+    {
+        return false;
+    }
+
+    return preprocessor_definition_evaluated_value(definition, NULL);
+}
 int preprocessor_evaluate(struct compile_process* compiler, struct preprocessor_node* root_node)
 {
     struct preprocessor_node* current = root_node;
@@ -800,6 +891,10 @@ int preprocessor_evaluate(struct compile_process* compiler, struct preprocessor_
         case PREPROCESSOR_NUMBER_NODE:
             result = preprocessor_evaluate_number(current);
         break;
+
+        case PREPROCESSOR_IDENTIFIER_NODE:
+            result = preprocessor_evaluate_identifier(compiler, current);
+            break;
     }
     return result;
 }
