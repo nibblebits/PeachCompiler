@@ -1430,6 +1430,7 @@ int expressionable_parse_single(struct expressionable *expressionable);
 void expressionable_parse(struct expressionable *expressionable);
 
 size_t function_node_argument_stack_addition(struct node *node);
+long arithmetic(struct compile_process* compiler, long left_operand, long right_operand, const char* op, bool* success);
 
 #define TOTAL_OPERATOR_GROUPS 14
 #define MAX_OPERATORS_IN_GROUP 12
