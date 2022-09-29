@@ -29,6 +29,8 @@ struct compile_process *compile_process_create(const char *filename, const char 
     process->flags = flags;
     process->cfile.fp = file;
     process->ofile = out_file;
+    process->pos.line = 1;
+    process->pos.col = 1;
     process->generator = codegenerator_new(process);
     process->resolver = resolver_default_new_process(process);
 
