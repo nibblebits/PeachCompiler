@@ -1,5 +1,1 @@
-#define ABC 1+5
-
-#if ABC >= 6
-#error "hello"
-#endif
+#define ABC(x, y) x*y
