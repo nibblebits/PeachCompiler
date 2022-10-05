@@ -1,1 +1,3 @@
-#define ABC(x, y) x*y
+#define ABC 50
+int x = ABC;
+
