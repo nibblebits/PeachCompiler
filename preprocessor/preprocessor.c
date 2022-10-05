@@ -1187,6 +1187,84 @@ void preprocessor_handle_symbol(struct compile_process *compiler, struct token *
     }
 }
 
+struct token* preprocessor_handle_identifier_macro_call_argument_parse_parentheses(struct compile_process* compiler, struct vector* src_vec, struct vector* value_vec, struct preprocessor_function_arguments* arguments, struct token* left_bracket_token)
+{
+    // Push the  left bracket token to the stack
+    vector_push(value_vec, left_bracket_token);
+
+    struct token* next_token = vector_peek(src_vec);
+    while(next_token && !token_is_symbol(next_token, ')'))
+    {
+        if (token_is_operator(next_token, "("))
+        {
+            next_token = preprocessor_handle_identifier_macro_call_argument_parse_parentheses(compiler, src_vec, value_vec, arguments, next_token);
+        }
+        vector_push(value_vec, next_token);
+        next_token = vector_peek(src_vec);
+    }
+
+    if (!next_token)
+    {
+        compiler_error(compiler, "You did not end your parentheses expecting a )");
+    }
+    vector_push(value_vec, next_token);
+    return vector_peek(src_vec);
+}
+
+void preprocessor_function_argument_push(struct preprocessor_function_arguments* arguments, struct vector* value_vec)
+{
+    struct preprocessor_function_argument arg;
+    arg.tokens = vector_clone(value_vec);
+    vector_push(arguments->arguments, &arg);
+}
+
+void preprocessor_handle_identifier_macro_call_argument(struct preprocessor_function_arguments* arguments, struct vector* token_vec)
+{
+    preprocessor_function_argument_push(arguments, token_vec);
+}
+
+struct token* preprocessor_handle_identifier_macro_call_argument_parse(struct compile_process* compiler, struct vector* src_vec, struct vector* value_vec, struct preprocessor_function_arguments* arguments, struct token* token)
+{
+    if (token_is_operator(token, "("))
+    {
+        return preprocessor_handle_identifier_macro_call_argument_parse_parentheses(compiler, src_vec, value_vec, arguments, token);
+    }
+    if (token_is_symbol(token, ')'))
+    {
+        // We are done handling the call argument
+        preprocessor_handle_identifier_macro_call_argument(arguments, value_vec);
+        return NULL;
+    }
+
+    if (token_is_operator(token, ","))
+    {
+        preprocessor_handle_identifier_macro_call_argument(arguments, value_vec);
+        // Clear the value vector ready for next argument
+        vector_clear(value_vec);
+        token = vector_peek(src_vec);
+        return token;
+    }
+
+    vector_push(value_vec, token);
+    token = vector_peek(src_vec);
+    return token;
+}
+struct preprocessor_function_arguments* preprocessor_handle_identifier_macro_call_arguments(struct compile_process* compiler, struct vector* src_vec)
+{
+    // Skip the left bracket
+    vector_peek(src_vec);
+
+    struct preprocessor_function_arguments* arguments = preprocessor_function_arguments_create();
+    struct token* token = vector_peek(src_vec);
+    struct vector* value_vec = vector_create(sizeof(struct token));
+    while(token)
+    {
+        token  = preprocessor_handle_identifier_macro_call_argument_parse(compiler, src_vec, value_vec, arguments, token);
+    }
+
+    vector_free(value_vec);
+    return arguments;
+}
 int preprocessor_handle_identifier_for_token_vector(struct compile_process* compiler, struct vector* src_vec, struct vector* dst_vec, struct token* token)
 {
     struct preprocessor_definition* definition = preprocessor_get_definition(compiler->preprocessor, token->sval);
@@ -1205,9 +1283,10 @@ int preprocessor_handle_identifier_for_token_vector(struct compile_process* comp
 
     if (token_is_operator(vector_peek_no_increment(src_vec), "("))
     {
-        #warning "finish macro functions first"
-       // struct preprocessor_function_arguments* arguments = preprocessor_handle_identifier_macro_call_arguments(compiler, src_vec);
-
+        struct preprocessor_function_arguments* arguments = preprocessor_handle_identifier_macro_call_arguments(compiler, src_vec);
+        const char* function_name = token->sval;
+        preprocessor_macro_function_execute(compiler, function_name, arguments, 0);
+        return 0;
     }
 
     struct vector* definition_val = preprocessor_definition_value(definition);

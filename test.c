@@ -1,3 +1,3 @@
-#define ABC 50
-int x = ABC;
+#define SUM(x, y) x+y
 
+int x = SUM(5, 5);
