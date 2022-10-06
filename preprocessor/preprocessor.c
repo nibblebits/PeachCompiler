@@ -98,6 +98,7 @@ struct preprocessor_node
 void preprocessor_handle_token(struct compile_process *compiler, struct token *token);
 int preprocessor_parse_evaluate(struct compile_process *compiler, struct vector *token_vec);
 int preprocessor_evaluate(struct compile_process *compiler, struct preprocessor_node *root_node);
+int preprocessor_handle_identifier_for_token_vector(struct compile_process* compiler, struct vector* src_vec, struct vector* dst_vec, struct token* token);
 
 void preprocessor_execute_warning(struct compile_process *compiler, const char *msg)
 {
@@ -956,7 +957,11 @@ void preprocessor_token_vec_push_src_token_to_dst(struct compile_process* compil
 void preprocessor_token_vec_push_src_resolve_definition(struct compile_process* compiler, struct vector* src_vec, struct vector* dst_vec, struct token* token)
 {
     #warning "handle typedef"
-    #warning "handle identifiers"
+    if (token->type == TOKEN_TYPE_IDENTIFIER)
+    {
+        preprocessor_handle_identifier_for_token_vector(compiler, src_vec, dst_vec, token);
+        return;
+    }
 
     preprocessor_token_vec_push_src_token_to_dst(compiler, token, dst_vec);
 }
@@ -1001,7 +1006,12 @@ void preprocessor_macro_function_push_something(struct compile_process* compiler
 {
     #warning "process concat"
     
-    vector_push(value_vec_target, arg_token);
+    int res = preprocessor_macro_function_push_something_definition(compiler, definition, arguments, arg_token, definition_token_vec, value_vec_target);
+    if (res == -1)
+    {
+        vector_push(value_vec_target, arg_token);
+    }
+
 }
 
 int preprocessor_macro_function_execute(struct compile_process* compiler, const char* function_name, struct preprocessor_function_arguments* arguments, int flags)
@@ -1053,11 +1063,12 @@ int preprocessor_evaluate_function_call(struct compile_process* compiler, struct
     return preprocessor_macro_function_execute(compiler, macro_func_name, arguments, PREPROCESSOR_FLAG_EVALUATE_NODE);
 
 }
+
 int preprocessor_evaluate_exp(struct compile_process *compiler, struct preprocessor_node *node)
 {
     if (preprocessor_exp_is_macro_function_call(node))
     {
-#warning "handle macro function call"
+        return preprocessor_evaluate_function_call(compiler, node);
     }
 
     long left_operand = preprocessor_evaluate(compiler, node->exp.left);
