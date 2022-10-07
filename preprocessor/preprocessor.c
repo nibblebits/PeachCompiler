@@ -1222,6 +1222,34 @@ void preprocessor_macro_function_push_something(struct compile_process *compiler
     }
 }
 
+void preprocessor_handle_function_argument_to_string(struct compile_process* compiler, struct vector* src_vec, struct vector* value_vec_target, struct preprocessor_definition* definition, struct preprocessor_function_arguments* arguments)
+{
+    struct token* next_token = vector_peek(src_vec);
+    if (!next_token || next_token->type != TOKEN_TYPE_IDENTIFIER)
+    {
+        compiler_error(compiler, "No macro function argument was provided to convert to a string");
+    }
+
+    int argument_index = preprocessor_definition_argument_exists(definition, next_token->sval);
+    if (argument_index < 0)
+    {
+        compiler_error(compiler, "Unexpected macro function argument %s", next_token->sval);
+    }
+
+    struct preprocessor_function_argument* argument = preprocessor_function_argument_at(arguments, argument_index);
+    if (!argument)
+    {
+        compiler_error(compiler, "BUG: argument exists but failed to pull");
+    }
+
+    struct token* first_token_for_argument = vector_peek_at(argument->tokens, 0);
+    // Lets create a string token
+    struct token str_token = {0};
+    str_token.type = TOKEN_TYPE_STRING;
+    str_token.sval = first_token_for_argument->between_brackets;
+    vector_push(value_vec_target, &str_token);
+}
+
 int preprocessor_macro_function_execute(struct compile_process *compiler, const char *function_name, struct preprocessor_function_arguments *arguments, int flags)
 {
     struct preprocessor *preprocessor = compiler->preprocessor;
@@ -1247,7 +1275,14 @@ int preprocessor_macro_function_execute(struct compile_process *compiler, const 
     struct token *token = vector_peek(definition_token_vec);
     while (token)
     {
-#warning "implement strings"
+        if(token_is_symbol(token, '#'))
+        {
+            preprocessor_handle_function_argument_to_string(compiler, definition_token_vec, value_vec_target, definition, arguments);
+            token = vector_peek(definition_token_vec);
+            continue;
+        }
+
+        
         preprocessor_macro_function_push_something(compiler, definition, arguments, token, definition_token_vec, value_vec_target);
         token = vector_peek(definition_token_vec);
     }
