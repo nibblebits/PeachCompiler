@@ -574,7 +574,7 @@ struct resolver_entity *resolver_follow_for_name(struct resolver_process *resolv
         result->identifier = entity;
     }
 
-    if (entity->type == RESOLVER_ENTITY_TYPE_VARIABLE && datatype_is_struct_or_union(&entity->var_data.dtype) ||
+    if ((entity->type == RESOLVER_ENTITY_TYPE_VARIABLE && datatype_is_struct_or_union(&entity->var_data.dtype)) ||
         (entity->type == RESOLVER_ENTITY_TYPE_FUNCTION && datatype_is_struct_or_union(&entity->dtype)))
     {
         result->last_struct_union_entity = entity;
