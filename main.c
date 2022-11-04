@@ -1,11 +1,11 @@
-#include <stdio.h>
-#include "helpers/vector.h"
 #include "compiler.h"
-int main(int argc, char** argv)
+#include "helpers/vector.h"
+#include <stdio.h>
+int main(int argc, char **argv)
 {
-    const char* input_file = "./test.c";
-    const char* output_file = "./test";
-    const char* option = "exec";
+    const char *input_file  = "./test.c";
+    const char *output_file = "./test";
+    const char *option      = "exec";
 
     if (argc > 1)
     {
@@ -31,7 +31,7 @@ int main(int argc, char** argv)
     {
         printf("everything compiled file\n");
     }
-    else if(res == COMPILER_FAILED_WITH_ERRORS)
+    else if (res == COMPILER_FAILED_WITH_ERRORS)
     {
         printf("Compile failed\n");
     }
@@ -61,7 +61,6 @@ int main(int argc, char** argv)
             printf("Issue assemblign the assembly file with NASM and linking with gcc");
             return res;
         }
-
     }
     return 0;
 }

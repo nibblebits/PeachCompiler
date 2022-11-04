@@ -6,8 +6,8 @@ OBJECTS= ./build/compiler.o ./build/cprocess.o ./build/rdefault.o \
 			./build/node.o ./build/expressionable.o ./build/helper.o \
 			./build/helpers/buffer.o ./build/helpers/vector.o ./build/preprocessor.o
 INCLUDES= -I./
-CC = gcc
-CFLAGS = -Wall -Wno-cpp
+CC = clang
+CFLAGS = -Wall -Wno-cpp -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-function
 
 all: ${OBJECTS}
 	$(CC) $(CFLAGS) main.c ${INCLUDES} ${OBJECTS} -g -o ./main

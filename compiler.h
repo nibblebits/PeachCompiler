@@ -1,10 +1,10 @@
 #ifndef PEACHCOMPILER_H
 #define PEACHCOMPILER_H
 
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
 #include <linux/limits.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
 
 #define S_EQ(str, str2) \
     (str && str2 && (strcmp(str, str2) == 0))
@@ -159,7 +159,7 @@ enum
 
 enum
 {
-    COMPILE_PROCESS_EXECUTE_NASM = 0b00000001,
+    COMPILE_PROCESS_EXECUTE_NASM     = 0b00000001,
     COMPILE_PROCESS_EXPORT_AS_OBJECT = 0b00000010,
 };
 
@@ -224,7 +224,7 @@ struct code_generator
         } current;
 
         // Vector of generatr_switch_stmt_entity
-        struct vector* swtiches;
+        struct vector *swtiches;
     } _switch;
 
     // A vector of struct string_table_element*
@@ -236,7 +236,7 @@ struct code_generator
     struct vector *exit_points;
 
     // Vector of const char* that will go in the data section
-    struct vector* custom_data_section;
+    struct vector *custom_data_section;
 
     // vector of struct response*
     struct vector *responses;
@@ -249,8 +249,7 @@ struct preprocessor_definition;
 struct preprocessor_function_argument;
 struct preprocessor_included_file;
 
-
-typedef void (*PREPROCESSOR_STATIC_INCLUDE_HANDLER_POST_CREATION)(struct preprocessor* preprocessor, struct preprocessor_included_file* included_file);
+typedef void (*PREPROCESSOR_STATIC_INCLUDE_HANDLER_POST_CREATION)(struct preprocessor *preprocessor, struct preprocessor_included_file *included_file);
 
 enum
 {
@@ -265,17 +264,17 @@ struct preprocessor_definition;
 struct preprocessor_function_argument
 {
     // Tokens for this argument struct token
-    struct vector* tokens;
+    struct vector *tokens;
 };
 
 struct preprocessor_function_arguments
 {
     // Vector of struct preprocessor_function_argument
-    struct vector* arguments;
+    struct vector *arguments;
 };
 
-typedef int (*PREPROCESSOR_DEFINITION_NATIVE_CALL_EVALUATE)(struct preprocessor_definition* definition, struct preprocessor_function_arguments* arguments);
-typedef struct vector* (*PREPROCESSOR_DEFINITION_NATIVE_CALL_VALUE)(struct preprocessor_definition* definition, struct preprocessor_function_arguments* arguments);
+typedef int (*PREPROCESSOR_DEFINITION_NATIVE_CALL_EVALUATE)(struct preprocessor_definition *definition, struct preprocessor_function_arguments *arguments);
+typedef struct vector *(*PREPROCESSOR_DEFINITION_NATIVE_CALL_VALUE)(struct preprocessor_definition *definition, struct preprocessor_function_arguments *arguments);
 
 struct preprocessor_definition
 {
@@ -283,33 +282,34 @@ struct preprocessor_definition
     int type;
 
     // The name i.e #define ABC ABC is the name
-    const char* name;
-    union 
+    const char *name;
+    union
     {
         struct standard_preprocessor_definition
         {
             // A vecor of definition value tokens. Values can be multiple lines
             // vector of struct token
-            struct vector* value;
+            struct vector *value;
 
             // A vector of const char* representing function arguments in order
-            // for example: ABC(a, b, c) 
-            struct vector* arguments;
+            // for example: ABC(a, b, c)
+            struct vector *arguments;
         } standard;
 
         struct typedef_preprocessor_definition
         {
-            struct vector* value;
+            struct vector *value;
         } _typedef;
 
         struct native_callback_preprocessor_definition
         {
             PREPROCESSOR_DEFINITION_NATIVE_CALL_EVALUATE evaluate;
             PREPROCESSOR_DEFINITION_NATIVE_CALL_VALUE value;
-        } native;;
+        } native;
+        ;
     };
-    
-    struct preprocessor* preprocessor;
+
+    struct preprocessor *preprocessor;
 };
 
 struct preprocessor_included_file
@@ -320,21 +320,20 @@ struct preprocessor_included_file
 struct preprocessor
 {
     // A vector of struct preprocessor_definition*
-    struct vector* definitions;
+    struct vector *definitions;
     // Vector of struct preprocessor_node*
-    struct vector* exp_vector;
+    struct vector *exp_vector;
 
-    struct expressionable* expressionable;
+    struct expressionable *expressionable;
 
-    struct compile_process* compiler;
+    struct compile_process *compiler;
 
     // A vector of included files struct preprocessor_included_file*
-    struct vector* includes;
+    struct vector *includes;
 };
 
-struct preprocessor* preprocessor_create(struct compile_process* compiler);
-int preprocessor_run(struct compile_process* compiler);
-
+struct preprocessor *preprocessor_create(struct compile_process *compiler);
+int preprocessor_run(struct compile_process *compiler);
 
 struct compile_process
 {
@@ -350,7 +349,7 @@ struct compile_process
 
     // Untampered token vector, contains definitions, and source code tokens, the preprocessor
     // will go through this vector and populate the "token_vec" vector after it is done.
-    struct vector* token_vec_original;
+    struct vector *token_vec_original;
 
     // A vector of tokens from lexical analysis.
     struct vector *token_vec;
@@ -379,8 +378,8 @@ struct compile_process
     struct resolver_process *resolver;
 
     // A vector of const char* that represents include directories.
-    struct vector* include_dirs;
-    struct preprocessor* preprocessor;
+    struct vector *include_dirs;
+    struct preprocessor *preprocessor;
 };
 
 enum
@@ -431,9 +430,9 @@ enum
 
 enum
 {
-    NODE_FLAG_INSIDE_EXPRESSION = 0b00000001,
+    NODE_FLAG_INSIDE_EXPRESSION      = 0b00000001,
     NODE_FLAG_IS_FORWARD_DECLARATION = 0b00000010,
-    NODE_FLAG_HAS_VARIABLE_COMBINED = 0b00000100
+    NODE_FLAG_HAS_VARIABLE_COMBINED  = 0b00000100
 };
 
 struct array_brackets
@@ -519,8 +518,8 @@ enum
 {
     STACK_FRAME_ELEMENT_FLAG_IS_PUSHED_ADDRESS = 0b00000001,
     STACK_FRAME_ELEMENT_FLAG_ELEMENT_NOT_FOUND = 0b00000010,
-    STACK_FRAME_ELEMENT_FLAG_IS_NUMERICAL = 0b00000100,
-    STACK_FRAME_ELEMENT_FLAG_HAS_DATATYPE = 0b00001000,
+    STACK_FRAME_ELEMENT_FLAG_IS_NUMERICAL      = 0b00000100,
+    STACK_FRAME_ELEMENT_FLAG_HAS_DATATYPE      = 0b00001000,
 };
 
 void stackframe_pop(struct node *func_node);
@@ -787,14 +786,14 @@ struct node
 
 enum
 {
-    RESOLVER_ENTITY_FLAG_IS_STACK = 0b00000001,
+    RESOLVER_ENTITY_FLAG_IS_STACK                  = 0b00000001,
     RESOLVER_ENTITY_FLAG_NO_MERGE_WITH_NEXT_ENTITY = 0b00000010,
     RESOLVER_ENTITY_FLAG_NO_MERGE_WITH_LEFT_ENTITY = 0b00000100,
-    RESOLVER_ENTITY_FLAG_DO_INDIRECTION = 0b00001000,
-    RESOLVER_ENTITY_FLAG_JUST_USE_OFFSET = 0b00010000,
-    RESOLVER_ENTITY_FLAG_IS_POINTER_ARRAY_ENTITY = 0b00100000,
-    RESOLVER_ENTITY_FLAG_WAS_CASTED = 0b01000000,
-    RESOLVER_ENTITY_FLAG_USES_ARRAY_BRACKETS = 0b10000000
+    RESOLVER_ENTITY_FLAG_DO_INDIRECTION            = 0b00001000,
+    RESOLVER_ENTITY_FLAG_JUST_USE_OFFSET           = 0b00010000,
+    RESOLVER_ENTITY_FLAG_IS_POINTER_ARRAY_ENTITY   = 0b00100000,
+    RESOLVER_ENTITY_FLAG_WAS_CASTED                = 0b01000000,
+    RESOLVER_ENTITY_FLAG_USES_ARRAY_BRACKETS       = 0b10000000
 };
 
 enum
@@ -894,14 +893,14 @@ struct resolver_default_scope_data
 
 enum
 {
-    RESOLVER_RESULT_FLAG_FAILED = 0b00000001,
-    RESOLVER_RESULT_FLAG_RUNTIME_NEEDED_TO_FINISH_PATH = 0b00000010,
-    RESOLVER_RESULT_FLAG_PROCESSING_ARRAY_ENTITIES = 0b00000100,
-    RESOLVER_RESULT_FLAG_HAS_POINTER_ARRAY_ACCESS = 0b00001000,
-    RESOLVER_RESULT_FLAG_FIRST_ENTITY_LOAD_TO_EBX = 0b00010000,
-    RESOLVER_RESULT_FLAG_FIRST_ENTITY_PUSH_VALUE = 0b00100000,
+    RESOLVER_RESULT_FLAG_FAILED                               = 0b00000001,
+    RESOLVER_RESULT_FLAG_RUNTIME_NEEDED_TO_FINISH_PATH        = 0b00000010,
+    RESOLVER_RESULT_FLAG_PROCESSING_ARRAY_ENTITIES            = 0b00000100,
+    RESOLVER_RESULT_FLAG_HAS_POINTER_ARRAY_ACCESS             = 0b00001000,
+    RESOLVER_RESULT_FLAG_FIRST_ENTITY_LOAD_TO_EBX             = 0b00010000,
+    RESOLVER_RESULT_FLAG_FIRST_ENTITY_PUSH_VALUE              = 0b00100000,
     RESOLVER_RESULT_FLAG_FINAL_INDIRECTION_REQUIRED_FOR_VALUE = 0b01000000,
-    RESOLVER_RESULT_FLAG_DOES_GET_ADDRESS = 0b10000000
+    RESOLVER_RESULT_FLAG_DOES_GET_ADDRESS                     = 0b10000000
 };
 
 struct resolver_result
@@ -1038,17 +1037,17 @@ struct resolver_entity
 };
 enum
 {
-    DATATYPE_FLAG_IS_SIGNED = 0b00000001,
-    DATATYPE_FLAG_IS_STATIC = 0b00000010,
-    DATATYPE_FLAG_IS_CONST = 0b00000100,
-    DATATYPE_FLAG_IS_POINTER = 0b00001000,
-    DATATYPE_FLAG_IS_ARRAY = 0b00010000,
-    DATATYPE_FLAG_IS_EXTERN = 0b00100000,
-    DATATYPE_FLAG_IS_RESTRICT = 0b01000000,
+    DATATYPE_FLAG_IS_SIGNED            = 0b00000001,
+    DATATYPE_FLAG_IS_STATIC            = 0b00000010,
+    DATATYPE_FLAG_IS_CONST             = 0b00000100,
+    DATATYPE_FLAG_IS_POINTER           = 0b00001000,
+    DATATYPE_FLAG_IS_ARRAY             = 0b00010000,
+    DATATYPE_FLAG_IS_EXTERN            = 0b00100000,
+    DATATYPE_FLAG_IS_RESTRICT          = 0b01000000,
     DATATYPE_FLAG_IGNORE_TYPE_CHECKING = 0b10000000,
-    DATATYPE_FLAG_IS_SECONDARY = 0b100000000,
+    DATATYPE_FLAG_IS_SECONDARY         = 0b100000000,
     DATATYPE_FLAG_STRUCT_UNION_NO_NAME = 0b1000000000,
-    DATATYPE_FLAG_IS_LITERAL = 0b10000000000,
+    DATATYPE_FLAG_IS_LITERAL           = 0b10000000000,
 };
 enum
 {
@@ -1073,86 +1072,58 @@ enum
 
 enum
 {
-    DATA_SIZE_ZERO = 0,
-    DATA_SIZE_BYTE = 1,
-    DATA_SIZE_WORD = 2,
-    DATA_SIZE_DWORD = 4,
+    DATA_SIZE_ZERO   = 0,
+    DATA_SIZE_BYTE   = 1,
+    DATA_SIZE_WORD   = 2,
+    DATA_SIZE_DWORD  = 4,
     DATA_SIZE_DDWORD = 8
 };
 
 enum
 {
-    EXPRESSION_FLAG_RIGHT_NODE = 0b0000000000000001,
-    EXPRESSION_IN_FUNCTION_CALL_ARGUMENTS = 0b0000000000000010,
+    EXPRESSION_FLAG_RIGHT_NODE               = 0b0000000000000001,
+    EXPRESSION_IN_FUNCTION_CALL_ARGUMENTS    = 0b0000000000000010,
     EXPRESSION_IN_FUNCTION_CALL_LEFT_OPERAND = 0b0000000000000100,
-    EXPRESSION_IS_ADDITION = 0b0000000000001000,
-    EXPRESSION_IS_SUBTRACTION = 0b0000000000010000,
-    EXPRESSION_IS_MULTIPLICATION = 0b0000000000100000,
-    EXPRESSION_IS_DIVISION = 0b0000000001000000,
-    EXPRESSION_IS_FUNCTION_CALL = 0b0000000010000000,
-    EXPRESSION_INDIRECTION = 0b0000000100000000,
-    EXPRESSION_GET_ADDRESS = 0b0000001000000000,
-    EXPRESSION_IS_ABOVE = 0b0000010000000000,
-    EXPRESSION_IS_ABOVE_OR_EQUAL = 0b0000100000000000,
-    EXPRESSION_IS_BELOW = 0b0001000000000000,
-    EXPRESSION_IS_BELOW_OR_EQUAL = 0b0010000000000000,
-    EXPRESSION_IS_EQUAL = 0b0100000000000000,
-    EXPRESSION_IS_NOT_EQUAL = 0b1000000000000000,
-    EXPRESSION_LOGICAL_AND = 0b10000000000000000,
-    EXPRESSION_LOGICAL_OR = 0b100000000000000000,
-    EXPRESSION_IN_LOGICAL_EXPRESSION = 0b1000000000000000000,
-    EXPRESSION_IS_BITSHIFT_LEFT = 0b10000000000000000000,
-    EXPRESSION_IS_BITSHIFT_RIGHT = 0b100000000000000000000,
-    EXPRESSION_IS_BITWISE_OR = 0b1000000000000000000000,
-    EXPRESSION_IS_BITWISE_AND = 0b10000000000000000000000,
-    EXPRESSION_IS_BITWISE_XOR = 0b100000000000000000000000,
-    EXPRESSION_IS_NOT_ROOT_NODE = 0b1000000000000000000000000,
-    EXPRESSION_IS_ASSIGNMENT = 0b10000000000000000000000000,
-    IS_ALONE_STATEMENT = 0b100000000000000000000000000,
-    EXPRESSION_IS_UNARY = 0b1000000000000000000000000000,
-    IS_STATEMENT_RETURN = 0b10000000000000000000000000000,
-    IS_RIGHT_OPERAND_OF_ASSIGNMENT = 0b100000000000000000000000000000,
-    IS_LEFT_OPERAND_OF_ASSIGNMENT = 0b1000000000000000000000000000000,
-    EXPRESSION_IS_MODULAS = 0b10000000000000000000000000000000,
+    EXPRESSION_IS_ADDITION                   = 0b0000000000001000,
+    EXPRESSION_IS_SUBTRACTION                = 0b0000000000010000,
+    EXPRESSION_IS_MULTIPLICATION             = 0b0000000000100000,
+    EXPRESSION_IS_DIVISION                   = 0b0000000001000000,
+    EXPRESSION_IS_FUNCTION_CALL              = 0b0000000010000000,
+    EXPRESSION_INDIRECTION                   = 0b0000000100000000,
+    EXPRESSION_GET_ADDRESS                   = 0b0000001000000000,
+    EXPRESSION_IS_ABOVE                      = 0b0000010000000000,
+    EXPRESSION_IS_ABOVE_OR_EQUAL             = 0b0000100000000000,
+    EXPRESSION_IS_BELOW                      = 0b0001000000000000,
+    EXPRESSION_IS_BELOW_OR_EQUAL             = 0b0010000000000000,
+    EXPRESSION_IS_EQUAL                      = 0b0100000000000000,
+    EXPRESSION_IS_NOT_EQUAL                  = 0b1000000000000000,
+    EXPRESSION_LOGICAL_AND                   = 0b10000000000000000,
+    EXPRESSION_LOGICAL_OR                    = 0b100000000000000000,
+    EXPRESSION_IN_LOGICAL_EXPRESSION         = 0b1000000000000000000,
+    EXPRESSION_IS_BITSHIFT_LEFT              = 0b10000000000000000000,
+    EXPRESSION_IS_BITSHIFT_RIGHT             = 0b100000000000000000000,
+    EXPRESSION_IS_BITWISE_OR                 = 0b1000000000000000000000,
+    EXPRESSION_IS_BITWISE_AND                = 0b10000000000000000000000,
+    EXPRESSION_IS_BITWISE_XOR                = 0b100000000000000000000000,
+    EXPRESSION_IS_NOT_ROOT_NODE              = 0b1000000000000000000000000,
+    EXPRESSION_IS_ASSIGNMENT                 = 0b10000000000000000000000000,
+    IS_ALONE_STATEMENT                       = 0b100000000000000000000000000,
+    EXPRESSION_IS_UNARY                      = 0b1000000000000000000000000000,
+    IS_STATEMENT_RETURN                      = 0b10000000000000000000000000000,
+    IS_RIGHT_OPERAND_OF_ASSIGNMENT           = 0b100000000000000000000000000000,
+    IS_LEFT_OPERAND_OF_ASSIGNMENT            = 0b1000000000000000000000000000000,
+    EXPRESSION_IS_MODULAS                    = 0b10000000000000000000000000000000,
 };
 
-#define EXPRESSION_GEN_MATHABLE (       \
-    EXPRESSION_IS_ADDITION |           \
-    EXPRESSION_IS_SUBTRACTION |        \
-    EXPRESSION_IS_MULTIPLICATION |     \
-    EXPRESSION_IS_DIVISION |           \
-    EXPRESSION_IS_MODULAS |            \
-    EXPRESSION_IS_FUNCTION_CALL |      \
-    EXPRESSION_INDIRECTION |           \
-    EXPRESSION_GET_ADDRESS |           \
-    EXPRESSION_IS_ABOVE |              \
-    EXPRESSION_IS_ABOVE_OR_EQUAL |     \
-    EXPRESSION_IS_BELOW |              \
-    EXPRESSION_IS_BELOW_OR_EQUAL |     \
-    EXPRESSION_IS_EQUAL |              \
-    EXPRESSION_IS_NOT_EQUAL |          \
-    EXPRESSION_LOGICAL_AND |           \
-    EXPRESSION_LOGICAL_OR |            \
-    EXPRESSION_IN_LOGICAL_EXPRESSION | \
-    EXPRESSION_IS_BITSHIFT_LEFT |      \
-    EXPRESSION_IS_BITSHIFT_RIGHT |     \
-    EXPRESSION_IS_BITWISE_OR |         \
-    EXPRESSION_IS_BITWISE_AND |        \
-    EXPRESSION_IS_BITWISE_XOR)
+#define EXPRESSION_GEN_MATHABLE ( \
+    EXPRESSION_IS_ADDITION | EXPRESSION_IS_SUBTRACTION | EXPRESSION_IS_MULTIPLICATION | EXPRESSION_IS_DIVISION | EXPRESSION_IS_MODULAS | EXPRESSION_IS_FUNCTION_CALL | EXPRESSION_INDIRECTION | EXPRESSION_GET_ADDRESS | EXPRESSION_IS_ABOVE | EXPRESSION_IS_ABOVE_OR_EQUAL | EXPRESSION_IS_BELOW | EXPRESSION_IS_BELOW_OR_EQUAL | EXPRESSION_IS_EQUAL | EXPRESSION_IS_NOT_EQUAL | EXPRESSION_LOGICAL_AND | EXPRESSION_LOGICAL_OR | EXPRESSION_IN_LOGICAL_EXPRESSION | EXPRESSION_IS_BITSHIFT_LEFT | EXPRESSION_IS_BITSHIFT_RIGHT | EXPRESSION_IS_BITWISE_OR | EXPRESSION_IS_BITWISE_AND | EXPRESSION_IS_BITWISE_XOR)
 
-
-#define EXPRESSION_UNINHERITABLE_FLAGS (            \
-      EXPRESSION_FLAG_RIGHT_NODE | EXPRESSION_IN_FUNCTION_CALL_ARGUMENTS | \
-      EXPRESSION_IS_ADDITION | EXPRESSION_IS_MODULAS | EXPRESSION_IS_SUBTRACTION | EXPRESSION_IS_MULTIPLICATION | \
-      EXPRESSION_IS_DIVISION | EXPRESSION_IS_ABOVE | EXPRESSION_IS_ABOVE_OR_EQUAL | \
-      EXPRESSION_IS_BELOW | EXPRESSION_IS_BELOW_OR_EQUAL | EXPRESSION_IS_EQUAL |    \
-      EXPRESSION_IS_NOT_EQUAL | EXPRESSION_LOGICAL_AND | \
-      EXPRESSION_IS_BITSHIFT_LEFT | EXPRESSION_IS_BITSHIFT_RIGHT | \
-      EXPRESSION_IS_BITWISE_OR | EXPRESSION_IS_BITWISE_AND | EXPRESSION_IS_BITWISE_XOR | EXPRESSION_IS_ASSIGNMENT | IS_ALONE_STATEMENT)
+#define EXPRESSION_UNINHERITABLE_FLAGS ( \
+    EXPRESSION_FLAG_RIGHT_NODE | EXPRESSION_IN_FUNCTION_CALL_ARGUMENTS | EXPRESSION_IS_ADDITION | EXPRESSION_IS_MODULAS | EXPRESSION_IS_SUBTRACTION | EXPRESSION_IS_MULTIPLICATION | EXPRESSION_IS_DIVISION | EXPRESSION_IS_ABOVE | EXPRESSION_IS_ABOVE_OR_EQUAL | EXPRESSION_IS_BELOW | EXPRESSION_IS_BELOW_OR_EQUAL | EXPRESSION_IS_EQUAL | EXPRESSION_IS_NOT_EQUAL | EXPRESSION_LOGICAL_AND | EXPRESSION_IS_BITSHIFT_LEFT | EXPRESSION_IS_BITSHIFT_RIGHT | EXPRESSION_IS_BITWISE_OR | EXPRESSION_IS_BITWISE_AND | EXPRESSION_IS_BITWISE_XOR | EXPRESSION_IS_ASSIGNMENT | IS_ALONE_STATEMENT)
 
 enum
 {
-    STRUCT_ACCESS_BACKWARDS = 0b00000001,
+    STRUCT_ACCESS_BACKWARDS       = 0b00000001,
     STRUCT_STOP_AT_POINTER_ACCESS = 0b00000010
 };
 
@@ -1163,7 +1134,7 @@ enum
 };
 
 int compile_file(const char *filename, const char *out_filename, int flags);
-struct compile_process *compile_process_create(const char *filename, const char *filename_out, int flags, struct compile_process* parent_process);
+struct compile_process *compile_process_create(const char *filename, const char *filename_out, int flags, struct compile_process *parent_process);
 
 char compile_process_next_char(struct lex_process *lex_process);
 char compile_process_peek_char(struct lex_process *lex_process);
@@ -1207,13 +1178,13 @@ bool datatype_is_primitive(struct datatype *dtype);
 bool datatype_is_struct_or_union_non_pointer(struct datatype *dtype);
 struct datatype datatype_for_numeric();
 struct datatype datatype_for_string();
-struct datatype* datatype_thats_a_pointer(struct datatype* d1, struct datatype* d2);
-struct datatype* datatype_pointer_reduce(struct datatype* datatype, int by);
-bool is_logical_operator(const char* op);
-bool is_logical_node(struct node* node);
+struct datatype *datatype_thats_a_pointer(struct datatype *d1, struct datatype *d2);
+struct datatype *datatype_pointer_reduce(struct datatype *datatype, int by);
+bool is_logical_operator(const char *op);
+bool is_logical_node(struct node *node);
 
 bool token_is_operator(struct token *token, const char *val);
-bool is_operator_token(struct token* token);
+bool is_operator_token(struct token *token);
 
 struct node *node_create(struct node *_node);
 struct node *node_from_sym(struct symbol *sym);
@@ -1257,10 +1228,10 @@ void make_for_node(struct node *init_node, struct node *cond_node, struct node *
 void make_return_node(struct node *exp_node);
 void make_if_node(struct node *cond_node, struct node *body_node, struct node *next_node);
 void make_else_node(struct node *body_node);
-void make_unary_node(const char* op, struct node* operand_node, int flags);
-bool is_left_operanded_unary_operator(const char* op);
-bool is_parentheses(const char* op);
-bool unary_operand_compatible(struct token* token);
+void make_unary_node(const char *op, struct node *operand_node, int flags);
+bool is_left_operanded_unary_operator(const char *op);
+bool is_parentheses(const char *op);
+bool unary_operand_compatible(struct token *token);
 struct node *node_pop();
 struct node *node_peek();
 struct node *node_peek_or_null();
@@ -1386,7 +1357,6 @@ void symresolver_build_for_node(struct compile_process *process, struct node *no
 struct symbol *symresolver_get_symbol(struct compile_process *process, const char *name);
 struct symbol *symresolver_get_symbol_for_native_function(struct compile_process *process, const char *name);
 
-
 struct expressionable;
 struct expressionable_callbacks;
 struct expressionable_config;
@@ -1400,8 +1370,8 @@ void *expressionable_node_peek_or_null(struct expressionable *expressionable);
 void expressionable_ignore_nl(struct expressionable *expressionable, struct token *next_token);
 struct token *expressionable_peek_next(struct expressionable *expressionable);
 bool expressionable_token_next_is_operator(struct expressionable *expressionable, const char *op);
-void expressionable_init(struct expressionable* expressionable, struct vector* token_vector, struct vector* node_vector, struct expressionable_config* config, int flags);
-struct expressionable* expressionable_create(struct expressionable_config* config, struct vector* token_vector, struct vector* node_vector, int flags);
+void expressionable_init(struct expressionable *expressionable, struct vector *token_vector, struct vector *node_vector, struct expressionable_config *config, int flags);
+struct expressionable *expressionable_create(struct expressionable_config *config, struct vector *token_vector, struct vector *node_vector, int flags);
 int expressionable_parse_number(struct expressionable *expressionable);
 int expressionable_parse_identifier(struct expressionable *expressionable);
 
@@ -1422,7 +1392,7 @@ void expressionable_parse_for_indirection_unary(struct expressionable *expressio
 void expressionable_parse_for_normal_unary(struct expressionable *expressionable);
 void expressionable_parse_unary(struct expressionable *expressionable);
 void expressionable_parse_for_operator(struct expressionable *expressionable);
-void expressionable_parse_tenary(struct expressionable* expressionable);
+void expressionable_parse_tenary(struct expressionable *expressionable);
 int expressionable_parse_exp(struct expressionable *expressionable, struct token *token);
 int expressionable_parse_token(struct expressionable *expressionable, struct token *token, int flags);
 int expressionable_parse_single_with_flags(struct expressionable *expressionable, int flags);
@@ -1430,7 +1400,7 @@ int expressionable_parse_single(struct expressionable *expressionable);
 void expressionable_parse(struct expressionable *expressionable);
 
 size_t function_node_argument_stack_addition(struct node *node);
-long arithmetic(struct compile_process* compiler, long left_operand, long right_operand, const char* op, bool* success);
+long arithmetic(struct compile_process *compiler, long left_operand, long right_operand, const char *op, bool *success);
 
 #define TOTAL_OPERATOR_GROUPS 14
 #define MAX_OPERATORS_IN_GROUP 12
@@ -1446,7 +1416,6 @@ struct expressionable_op_precedence_group
     char *operators[MAX_OPERATORS_IN_GROUP];
     int associtivity;
 };
-
 
 enum
 {
@@ -1466,25 +1435,24 @@ enum
 
 struct expressionable;
 
-typedef void*(*EXPRESSIONABLE_HANDLE_NUMBER)(struct expressionable* expressionable);
-typedef void*(*EXPRESSIONABLE_HANDLE_IDENTIFIER)(struct expressionable* expressionable);
-typedef void (*EXPRESSIONABLE_MAKE_EXPRESSION_NODE)(struct expressionable* expressionable, void* left_node_ptr, void* right_node_ptr, const char* op);
-typedef void (*EXPRESSIONABLE_MAKE_TENARY_NODE)(struct expressionable* expressionable, void* true_result_node, void* false_result_node);
-typedef void (*EXPRESSIONABLE_MAKE_PARENTHESES_NODE)(struct expressionable* expressionable, void* node_ptr);
-typedef void (*EXPRESSIONABLE_MAKE_UNARY_NODE)(struct expressionable* expressionable, const char* op, void* right_operand_node_ptr);
-typedef void (*EXPRESSIONABLE_MAKE_UNARY_INDIRECTION_NODE)(struct expressionable* expressionable, int ptr_depth, void* right_operand_node_ptr);
-typedef int (*EXPRESSIONABLE_GET_NODE_TYPE)(struct expressionable* expressionable, void* node);
-typedef void* (*EXPRESSIONABLE_GET_LEFT_NODE)(struct expressionable* expressionable, void* target_node);
-typedef void* (*EXPRESSIONABLE_GET_RIGHT_NODE)(struct expressionable* expressionable, void* target_node);
-typedef const char* (*EXPRESSIONABLE_GET_NODE_OPERATOR)(struct expressionable* expressionable, void* target_node);
-typedef void** (*EXPRESSIONABLE_GET_NODE_ADDRESS)(struct expressionable* expressionable, void* target_node);
-typedef void (*EXPRESSIONABLE_SET_EXPRESSION_NODE)(struct expressionable* expressionable, void* node, void* left_node, void* right_node, const char* op );
+typedef void *(*EXPRESSIONABLE_HANDLE_NUMBER)(struct expressionable *expressionable);
+typedef void *(*EXPRESSIONABLE_HANDLE_IDENTIFIER)(struct expressionable *expressionable);
+typedef void (*EXPRESSIONABLE_MAKE_EXPRESSION_NODE)(struct expressionable *expressionable, void *left_node_ptr, void *right_node_ptr, const char *op);
+typedef void (*EXPRESSIONABLE_MAKE_TENARY_NODE)(struct expressionable *expressionable, void *true_result_node, void *false_result_node);
+typedef void (*EXPRESSIONABLE_MAKE_PARENTHESES_NODE)(struct expressionable *expressionable, void *node_ptr);
+typedef void (*EXPRESSIONABLE_MAKE_UNARY_NODE)(struct expressionable *expressionable, const char *op, void *right_operand_node_ptr);
+typedef void (*EXPRESSIONABLE_MAKE_UNARY_INDIRECTION_NODE)(struct expressionable *expressionable, int ptr_depth, void *right_operand_node_ptr);
+typedef int (*EXPRESSIONABLE_GET_NODE_TYPE)(struct expressionable *expressionable, void *node);
+typedef void *(*EXPRESSIONABLE_GET_LEFT_NODE)(struct expressionable *expressionable, void *target_node);
+typedef void *(*EXPRESSIONABLE_GET_RIGHT_NODE)(struct expressionable *expressionable, void *target_node);
+typedef const char *(*EXPRESSIONABLE_GET_NODE_OPERATOR)(struct expressionable *expressionable, void *target_node);
+typedef void **(*EXPRESSIONABLE_GET_NODE_ADDRESS)(struct expressionable *expressionable, void *target_node);
+typedef void (*EXPRESSIONABLE_SET_EXPRESSION_NODE)(struct expressionable *expressionable, void *node, void *left_node, void *right_node, const char *op);
 
-typedef bool (*EXPRESSIONABLE_SHOULD_JOIN_NODES)(struct expressionable* expressionable, void* previous_node, void* node);
-typedef void* (*EXPRESSIONABLE_JOIN_NODES)(struct expressionable* expressionable, void* previous_node, void* node);
-typedef bool (*EXPRESSIONABLE_EXPECTING_ADDITIONAL_NODE)(struct expressionable* expressionable, void* node);
-typedef bool (*EXPRESSIONABLE_IS_CUSTOM_OPERATOR)(struct expressionable* expressionable, struct token* token);
-
+typedef bool (*EXPRESSIONABLE_SHOULD_JOIN_NODES)(struct expressionable *expressionable, void *previous_node, void *node);
+typedef void *(*EXPRESSIONABLE_JOIN_NODES)(struct expressionable *expressionable, void *previous_node, void *node);
+typedef bool (*EXPRESSIONABLE_EXPECTING_ADDITIONAL_NODE)(struct expressionable *expressionable, void *node);
+typedef bool (*EXPRESSIONABLE_IS_CUSTOM_OPERATOR)(struct expressionable *expressionable, struct token *token);
 
 struct expressionable_config
 {
@@ -1520,8 +1488,8 @@ struct expressionable
 {
     int flags;
     struct expressionable_config config;
-    struct vector* token_vec;
-    struct vector* node_vec_out;
+    struct vector *token_vec;
+    struct vector *node_vec_out;
 };
 
 struct fixup;

@@ -7,7 +7,7 @@ size_t variable_size(struct node *var_node)
     return datatype_size(&var_node->var.type);
 }
 
-struct datatype* datatype_thats_a_pointer(struct datatype* d1, struct datatype* d2)
+struct datatype *datatype_thats_a_pointer(struct datatype *d1, struct datatype *d2)
 {
     if (d1->flags & DATATYPE_FLAG_IS_POINTER)
     {
@@ -22,19 +22,19 @@ struct datatype* datatype_thats_a_pointer(struct datatype* d1, struct datatype* 
     return NULL;
 }
 
-bool is_logical_operator(const char* op)
+bool is_logical_operator(const char *op)
 {
     return S_EQ(op, "&&") || S_EQ(op, "||");
 }
 
-bool is_logical_node(struct node* node)
+bool is_logical_node(struct node *node)
 {
     return node->type == NODE_TYPE_EXPRESSION && is_logical_operator(node->exp.op);
 }
 
-struct datatype* datatype_pointer_reduce(struct datatype* datatype, int by)
+struct datatype *datatype_pointer_reduce(struct datatype *datatype, int by)
 {
-    struct datatype* new_datatype = calloc(1, sizeof(struct datatype));
+    struct datatype *new_datatype = calloc(1, sizeof(struct datatype));
     memcpy(new_datatype, datatype, sizeof(struct datatype));
     new_datatype->pointer_depth -= by;
     if (new_datatype->pointer_depth <= 0)
@@ -44,7 +44,6 @@ struct datatype* datatype_pointer_reduce(struct datatype* datatype, int by)
     }
     return new_datatype;
 }
-
 
 size_t variable_size_for_list(struct node *var_list_node)
 {
@@ -117,11 +116,11 @@ int align_value_treat_positive(int val, int to)
 
 int compute_sum_padding(struct vector *vec)
 {
-    int padding = 0;
-    int last_type = -1;
+    int padding      = 0;
+    int last_type    = -1;
     bool mixed_types = false;
     vector_set_peek_pointer(vec, 0);
-    struct node *cur_node = vector_peek_ptr(vec);
+    struct node *cur_node  = vector_peek_ptr(vec);
     struct node *last_node = NULL;
     while (cur_node)
     {
@@ -134,7 +133,7 @@ int compute_sum_padding(struct vector *vec)
         padding += cur_node->var.padding;
         last_type = cur_node->var.type.type;
         last_node = cur_node;
-        cur_node = vector_peek_ptr(vec);
+        cur_node  = vector_peek_ptr(vec);
     }
 
     return padding;
@@ -148,13 +147,13 @@ int array_multiplier(struct datatype *dtype, int index, int index_value)
     }
 
     vector_set_peek_pointer(dtype->array.brackets->n_brackets, index + 1);
-    int size_sum = index_value;
+    int size_sum              = index_value;
     struct node *bracket_node = vector_peek_ptr(dtype->array.brackets->n_brackets);
     while (bracket_node)
     {
         assert(bracket_node->bracket.inner->type == NODE_TYPE_NUMBER);
         int declared_index = bracket_node->bracket.inner->llnum;
-        int size_value = declared_index;
+        int size_value     = declared_index;
         size_sum *= size_value;
         bracket_node = vector_peek_ptr(dtype->array.brackets->n_brackets);
     }
@@ -164,8 +163,7 @@ int array_multiplier(struct datatype *dtype, int index, int index_value)
 
 int array_offset(struct datatype *dtype, int index, int index_value)
 {
-    if (!(dtype->flags & DATATYPE_FLAG_IS_ARRAY) ||
-        (index == vector_count(dtype->array.brackets->n_brackets) - 1))
+    if (!(dtype->flags & DATATYPE_FLAG_IS_ARRAY) || (index == vector_count(dtype->array.brackets->n_brackets) - 1))
     {
         return index_value * datatype_element_size(dtype);
     }
@@ -173,15 +171,14 @@ int array_offset(struct datatype *dtype, int index, int index_value)
     return array_multiplier(dtype, index, index_value) * datatype_element_size(dtype);
 }
 
-
-struct node* body_largest_variable_node(struct node* body_node)
+struct node *body_largest_variable_node(struct node *body_node)
 {
     if (!body_node)
     {
         return NULL;
     }
 
-    if(body_node->type != NODE_TYPE_BODY)
+    if (body_node->type != NODE_TYPE_BODY)
     {
         return NULL;
     }
@@ -189,19 +186,19 @@ struct node* body_largest_variable_node(struct node* body_node)
     return body_node->body.largest_var_node;
 }
 
-struct node* variable_struct_or_union_largest_variable_node(struct node* var_node)
+struct node *variable_struct_or_union_largest_variable_node(struct node *var_node)
 {
     return body_largest_variable_node(variable_struct_or_union_body_node(var_node));
 }
 
-int struct_offset(struct compile_process* compile_proc, const char* struct_name, const char* var_name, struct node** var_node_out, int last_pos, int flags)
+int struct_offset(struct compile_process *compile_proc, const char *struct_name, const char *var_name, struct node **var_node_out, int last_pos, int flags)
 {
-    struct symbol* struct_sym = symresolver_get_symbol(compile_proc, struct_name);
+    struct symbol *struct_sym = symresolver_get_symbol(compile_proc, struct_name);
     assert(struct_sym && struct_sym->type == SYMBOL_TYPE_NODE);
-    struct node* node = struct_sym->data;
+    struct node *node = struct_sym->data;
     assert(node_is_struct_or_union(node));
 
-    struct vector* struct_vars_vec = node->_struct.body_n->body.statements;
+    struct vector *struct_vars_vec = node->_struct.body_n->body.statements;
     vector_set_peek_pointer(struct_vars_vec, 0);
     if (flags & STRUCT_ACCESS_BACKWARDS)
     {
@@ -209,11 +206,11 @@ int struct_offset(struct compile_process* compile_proc, const char* struct_name,
         vector_set_flag(struct_vars_vec, VECTOR_FLAG_PEEK_DECREMENT);
     }
 
-    struct node* var_node_cur = variable_node(vector_peek_ptr(struct_vars_vec));
-    struct node* var_node_last = NULL;
-    int position = last_pos;
-    *var_node_out = NULL;
-    while(var_node_cur)
+    struct node *var_node_cur  = variable_node(vector_peek_ptr(struct_vars_vec));
+    struct node *var_node_last = NULL;
+    int position               = last_pos;
+    *var_node_out              = NULL;
+    while (var_node_cur)
     {
         *var_node_out = var_node_cur;
         if (var_node_last)
@@ -236,177 +233,173 @@ int struct_offset(struct compile_process* compile_proc, const char* struct_name,
         }
 
         var_node_last = var_node_cur;
-        var_node_cur = variable_node(vector_peek_ptr(struct_vars_vec));
+        var_node_cur  = variable_node(vector_peek_ptr(struct_vars_vec));
     }
 
     vector_unset_flag(struct_vars_vec, VECTOR_FLAG_PEEK_DECREMENT);
     return position;
 }
 
-bool is_access_operator(const char* op)
+bool is_access_operator(const char *op)
 {
     return S_EQ(op, "->") || S_EQ(op, ".");
 }
-bool is_access_node(struct node* node)
+bool is_access_node(struct node *node)
 {
     return node->type == NODE_TYPE_EXPRESSION && is_access_operator(node->exp.op);
 }
 
-bool is_access_node_with_op(struct node* node, const char* op)
+bool is_access_node_with_op(struct node *node, const char *op)
 {
     return is_access_node(node) && S_EQ(node->exp.op, op);
 }
 
-bool is_array_operator(const char* op)
+bool is_array_operator(const char *op)
 {
     return S_EQ(op, "[]");
 }
 
-bool is_array_node(struct node* node)
+bool is_array_node(struct node *node)
 {
     return node->type == NODE_TYPE_EXPRESSION && is_array_operator(node->exp.op);
 }
 
-bool is_parentheses_operator(const char* op)
+bool is_parentheses_operator(const char *op)
 {
     return S_EQ(op, "()");
 }
 
-bool is_parentheses_node(struct node* node)
+bool is_parentheses_node(struct node *node)
 {
     return node->type == NODE_TYPE_EXPRESSION && is_parentheses_operator(node->exp.op);
 }
 
-bool is_argument_operator(const char* op)
+bool is_argument_operator(const char *op)
 {
     return S_EQ(op, ",");
 }
 
-bool is_argument_node(struct node* node)
+bool is_argument_node(struct node *node)
 {
     return node->type == NODE_TYPE_EXPRESSION && is_argument_operator(node->exp.op);
 }
 
-bool is_unary_operator(const char* op)
+bool is_unary_operator(const char *op)
 {
     return S_EQ(op, "-") || S_EQ(op, "!") || S_EQ(op, "~") || S_EQ(op, "*") || S_EQ(op, "&") || S_EQ(op, "++") || S_EQ(op, "--");
 }
 
-bool op_is_indirection(const char* op)
+bool op_is_indirection(const char *op)
 {
     return S_EQ(op, "*");
 }
 
-bool op_is_address(const char* op)
+bool op_is_address(const char *op)
 {
     return S_EQ(op, "&");
 }
-
 
 struct datatype datatype_for_numeric()
 {
     struct datatype dtype = {};
     dtype.flags |= DATATYPE_FLAG_IS_LITERAL;
-    dtype.type = DATA_TYPE_INTEGER;
+    dtype.type     = DATA_TYPE_INTEGER;
     dtype.type_str = "int";
-    dtype.size = DATA_SIZE_DWORD;
+    dtype.size     = DATA_SIZE_DWORD;
     return dtype;
 }
 
 struct datatype datatype_for_string()
 {
     struct datatype dtype = {};
-    dtype.type = DATA_TYPE_INTEGER;
-    dtype.type_str = "char";
+    dtype.type            = DATA_TYPE_INTEGER;
+    dtype.type_str        = "char";
     dtype.flags |= DATATYPE_FLAG_IS_POINTER | DATATYPE_FLAG_IS_LITERAL;
     dtype.pointer_depth = 1;
-    dtype.size = DATA_SIZE_DWORD;
+    dtype.size          = DATA_SIZE_DWORD;
     return dtype;
 }
 
-bool is_parentheses(const char* op)
+bool is_parentheses(const char *op)
 {
     return (S_EQ(op, "("));
 }
 
-bool is_left_operanded_unary_operator(const char* op)
+bool is_left_operanded_unary_operator(const char *op)
 {
     return S_EQ(op, "++") || S_EQ(op, "--");
 }
 
-bool unary_operand_compatible(struct token* token)
+bool unary_operand_compatible(struct token *token)
 {
-    return is_access_operator(token->sval) ||
-            is_array_operator(token->sval) ||
-            is_parentheses(token->sval);
+    return is_access_operator(token->sval) || is_array_operator(token->sval) || is_parentheses(token->sval);
 }
-void datatype_decrement_pointer(struct datatype* dtype)
+void datatype_decrement_pointer(struct datatype *dtype)
 {
     dtype->pointer_depth--;
     if (dtype->pointer_depth <= 0)
     {
         dtype->flags &= ~DATATYPE_FLAG_IS_POINTER;
     }
-
 }
 
-long arithmetic(struct compile_process* compiler, long left_operand, long right_operand, const char* op, bool* success)
+long arithmetic(struct compile_process *compiler, long left_operand, long right_operand, const char *op, bool *success)
 {
-    *success = true;
+    *success   = true;
     int result = 0;
     if (S_EQ(op, "*"))
     {
         result = left_operand * right_operand;
     }
-    else if(S_EQ(op, "/"))
+    else if (S_EQ(op, "/"))
     {
         result = left_operand / right_operand;
     }
-    else if(S_EQ(op, "+"))
+    else if (S_EQ(op, "+"))
     {
         result = left_operand + right_operand;
     }
-    else if(S_EQ(op, "-"))
+    else if (S_EQ(op, "-"))
     {
         result = left_operand - right_operand;
     }
-    else if(S_EQ(op, "=="))
+    else if (S_EQ(op, "=="))
     {
         result = left_operand == right_operand;
     }
-    else if(S_EQ(op, "!="))
+    else if (S_EQ(op, "!="))
     {
         result = left_operand != right_operand;
     }
-    else if(S_EQ(op, ">"))
+    else if (S_EQ(op, ">"))
     {
         result = left_operand > right_operand;
     }
-    else if(S_EQ(op, "<"))
+    else if (S_EQ(op, "<"))
     {
         result = left_operand < right_operand;
     }
-    else if(S_EQ(op, ">="))
+    else if (S_EQ(op, ">="))
     {
         result = left_operand >= right_operand;
     }
-    else if(S_EQ(op, "<="))
+    else if (S_EQ(op, "<="))
     {
         result = left_operand <= right_operand;
     }
-    else if(S_EQ(op, "<<"))
+    else if (S_EQ(op, "<<"))
     {
         result = left_operand << right_operand;
     }
-    else if(S_EQ(op, ">>"))
+    else if (S_EQ(op, ">>"))
     {
         result = left_operand >> right_operand;
     }
-    else if(S_EQ(op, "&&"))
+    else if (S_EQ(op, "&&"))
     {
         result = left_operand && right_operand;
     }
-    else if(S_EQ(op, "||"))
+    else if (S_EQ(op, "||"))
     {
         result = left_operand || right_operand;
     }

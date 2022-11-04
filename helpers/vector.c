@@ -1,9 +1,9 @@
 #include "vector.h"
-#include <memory.h>
-#include <stdlib.h>
 #include <assert.h>
+#include <memory.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 static bool vector_in_bounds_for_at(struct vector *vector, int index)
 {
@@ -23,12 +23,12 @@ static void vector_assert_bounds_for_pop(struct vector *vector, int index)
 struct vector *vector_create_no_saves(size_t esize)
 {
     struct vector *vector = calloc(sizeof(struct vector), 1);
-    vector->data = malloc(esize * VECTOR_ELEMENT_INCREMENT);
-    vector->mindex = VECTOR_ELEMENT_INCREMENT;
-    vector->rindex = 0;
-    vector->pindex = 0;
-    vector->esize = esize;
-    vector->count = 0;
+    vector->data          = malloc(esize * VECTOR_ELEMENT_INCREMENT);
+    vector->mindex        = VECTOR_ELEMENT_INCREMENT;
+    vector->rindex        = 0;
+    vector->pindex        = 0;
+    vector->esize         = esize;
+    vector->count         = 0;
     return vector;
 }
 
@@ -58,7 +58,7 @@ struct vector *vector_clone(struct vector *vector)
 struct vector *vector_create(size_t esize)
 {
     struct vector *vec = vector_create_no_saves(esize);
-    vec->saves = vector_create_no_saves(sizeof(struct vector));
+    vec->saves         = vector_create_no_saves(sizeof(struct vector));
     return vec;
 }
 
@@ -119,7 +119,7 @@ void *vector_peek_at(struct vector *vector, int index)
         return NULL;
     }
 
-    void* ptr = vector_at(vector, index);
+    void *ptr = vector_at(vector, index);
     return ptr;
 }
 
@@ -134,7 +134,7 @@ void *vector_peek_no_increment(struct vector *vector)
     return ptr;
 }
 
-void vector_peek_back(struct vector* vector)
+void vector_peek_back(struct vector *vector)
 {
     vector->pindex--;
 }
@@ -216,8 +216,8 @@ void vector_save(struct vector *vector)
 void vector_restore(struct vector *vector)
 {
     struct vector save_vec = *((struct vector *)(vector_back(vector->saves)));
-    save_vec.saves = vector->saves;
-    *vector = save_vec;
+    save_vec.saves         = vector->saves;
+    *vector                = save_vec;
     vector_pop(vector->saves);
 }
 
@@ -226,10 +226,10 @@ void vector_save_purge(struct vector *vector)
     vector_pop(vector->saves);
 }
 
-void vector_pop_last_peek(struct vector* vector)
+void vector_pop_last_peek(struct vector *vector)
 {
     assert(vector->pindex >= 1);
-    vector_pop_at(vector, vector->pindex-1);
+    vector_pop_at(vector, vector->pindex - 1);
 }
 
 void vector_push(struct vector *vector, void *elem)
@@ -281,7 +281,7 @@ int vector_elements_until_end(struct vector *vector, int index)
 void vector_shift_right_in_bounds_no_increment(struct vector *vector, int index, int amount)
 {
     vector_resize_for_index(vector, index, amount);
-    int eindex = (index + amount);
+    int eindex           = (index + amount);
     size_t bytes_to_move = vector_elements_until_end(vector, index) * vector->esize;
     memcpy(vector_at(vector, eindex), vector_at(vector, index), bytes_to_move);
     memset(vector_at(vector, index), 0x00, amount * vector->esize);
@@ -300,17 +300,17 @@ void vector_stretch(struct vector *vector, int index)
         return;
 
     vector_resize_for_index(vector, index, 0);
-    vector->count = index;
+    vector->count  = index;
     vector->rindex = index;
 }
 
-int vector_pop_value(struct vector* vector, void* val)
+int vector_pop_value(struct vector *vector, void *val)
 {
     int old_pp = vector->pindex;
     vector_set_peek_pointer(vector, 0);
-    void* ptr = vector_peek_ptr(vector);
+    void *ptr = vector_peek_ptr(vector);
     int index = 0;
-    while(ptr)
+    while (ptr)
     {
         if (ptr == val)
         {
@@ -347,10 +347,10 @@ void vector_shift_right(struct vector *vector, int index, int amount)
 
 void vector_pop_at(struct vector *vector, int index)
 {
-    void *dst_pos = vector_at(vector, index);
+    void *dst_pos          = vector_at(vector, index);
     void *next_element_pos = dst_pos + vector->esize;
-    void *end_pos = vector_data_end(vector);
-    size_t total = (size_t)end_pos - (size_t)next_element_pos;
+    void *end_pos          = vector_data_end(vector);
+    size_t total           = (size_t)end_pos - (size_t)next_element_pos;
     memcpy(dst_pos, next_element_pos, total);
     vector->count -= 1;
     vector->rindex -= 1;
@@ -367,7 +367,7 @@ void vector_peek_pop(struct vector *vector)
 void vector_push_multiple_at(struct vector *vector, int dst_index, void *ptr, int total)
 {
     vector_shift_right(vector, dst_index, total);
-    void *dst_ptr = vector_at(vector, dst_index);
+    void *dst_ptr      = vector_at(vector, dst_index);
     size_t total_bytes = total * vector->esize;
     memcpy(dst_ptr, ptr, total_bytes);
 }

@@ -3,12 +3,12 @@
 #include <stdlib.h>
 
 struct lex_process_functions compiler_lex_functions = {
-    .next_char=compile_process_next_char,
-    .peek_char=compile_process_peek_char,
-    .push_char=compile_process_push_char
+    .next_char = compile_process_next_char,
+    .peek_char = compile_process_peek_char,
+    .push_char = compile_process_push_char
 };
 
-void compiler_error(struct compile_process* compiler, const char* msg, ...)
+void compiler_error(struct compile_process *compiler, const char *msg, ...)
 {
     va_list args;
     va_start(args, msg);
@@ -18,7 +18,7 @@ void compiler_error(struct compile_process* compiler, const char* msg, ...)
     exit(-1);
 }
 
-void compiler_warning(struct compile_process* compiler, const char* msg, ...)
+void compiler_warning(struct compile_process *compiler, const char *msg, ...)
 {
     va_list args;
     va_start(args, msg);
@@ -27,14 +27,14 @@ void compiler_warning(struct compile_process* compiler, const char* msg, ...)
     fprintf(stderr, " on line %i, col %i in file %s\n", compiler->pos.line, compiler->pos.col, compiler->pos.filename);
 }
 
-int compile_file(const char* filename, const char* out_filename, int flags)
+int compile_file(const char *filename, const char *out_filename, int flags)
 {
-    struct compile_process* process = compile_process_create(filename, out_filename, flags, NULL);
+    struct compile_process *process = compile_process_create(filename, out_filename, flags, NULL);
     if (!process)
         return COMPILER_FAILED_WITH_ERRORS;
 
     // Preform lexical analysis
-    struct lex_process* lex_process = lex_process_create(process, &compiler_lex_functions, NULL);
+    struct lex_process *lex_process = lex_process_create(process, &compiler_lex_functions, NULL);
     if (!lex_process)
     {
         return COMPILER_FAILED_WITH_ERRORS;
@@ -50,7 +50,7 @@ int compile_file(const char* filename, const char* out_filename, int flags)
     {
         return COMPILER_FAILED_WITH_ERRORS;
     }
-    
+
     // Preform parsing
     if (parse(process) != PARSE_ALL_OK)
     {
@@ -61,7 +61,7 @@ int compile_file(const char* filename, const char* out_filename, int flags)
     {
         return COMPILER_FAILED_WITH_ERRORS;
     }
-    
+
     // Preform code generation..
 
     fclose(process->ofile);
