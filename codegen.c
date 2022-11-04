@@ -1113,7 +1113,7 @@ const char *codegen_byte_word_or_dword_or_ddword(size_t size, const char **reg_t
 
 void codegen_generate_assignment_instruction_for_operator(const char *mov_type_keyword, const char *address, const char *reg_to_use, const char *op, bool is_signed)
 {
-    assert(reg_to_use != "ecx");
+    assert(strcmp(reg_to_use, "ecx") != 0);
 
     if (S_EQ(op, "="))
     {
@@ -1426,7 +1426,7 @@ void codegen_generate_entity_access_for_function_call(struct resolver_result *re
     codegen_data_section_add("function_call_%i: dd 0", function_call_label_id);
     asm_push_ins_pop("ebx", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value");
     asm_push("mov dword [function_call_%i], ebx", function_call_label_id);
-    
+
     if (datatype_is_struct_or_union_non_pointer(&entity->dtype))
     {
         asm_push("; SUBTRACT ROOM FOR RETURNED STRUCTURE/UNION DATATYPE");
@@ -1568,7 +1568,7 @@ bool codegen_resolve_node_for_value(struct node *node, struct history *history)
     {
         // Do nothing
     }
-    else if(result->last_entity->type == RESOLVER_ENTITY_TYPE_FUNCTION_CALL && 
+    else if(result->last_entity->type == RESOLVER_ENTITY_TYPE_FUNCTION_CALL &&
         datatype_is_struct_or_union_non_pointer(&result->last_entity->dtype))
         {
             // Do nothing.
@@ -2477,7 +2477,7 @@ int codegen(struct compile_process *process)
     codegen_finish_scope();
 
     codegen_generate_data_section_add_ons();
-    
+
     // Generate read only data
     codegen_generate_rod();
 
