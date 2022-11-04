@@ -1,0 +1,26 @@
+{
+    "version": 4,
+    "env": {
+        "peachcompiler": [
+            "${workspaceFolder}/**"
+        ]
+    },
+    "configurations": [
+        {
+            "name": "peachcompiler",
+            "compilerArgs": [
+                "-Wall"
+            ],
+            "includePath": [
+                "${peachcompiler}"
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": "",
+                "path": [
+                    "${peachcompiler}"
+                ]
+            }
+        }
+    ]
+}
