@@ -668,7 +668,7 @@ struct vector *preprocessor_definition_value_with_arguments(struct preprocessor_
 {
     if (definition->type == PREPROCESSOR_DEFINITION_NATIVE_CALLBACK)
     {
-#warning "implement definition value for native.
+#warning "implement definition value for native."
         return NULL;
     }
     else if (definition->type == PREPROCESSOR_DEFINITION_TYPEDEF)
@@ -713,7 +713,7 @@ int preprocessor_definition_evaluated_value(struct preprocessor_definition *defi
     }
     else if (definition->type == PREPROCESSOR_DEFINITION_NATIVE_CALLBACK)
     {
-#warning "implement native callbacks.
+#warning "implement native callbacks."
         return -1;
     }
 
@@ -1199,7 +1199,7 @@ int preprocessor_macro_function_push_something_definition(struct compile_process
 }
 void preprocessor_macro_function_push_something(struct compile_process *compiler, struct preprocessor_definition *definition, struct preprocessor_function_arguments *arguments, struct token *arg_token, struct vector *definition_token_vec, struct vector *value_vec_target)
 {
-#warning "process concat"
+#warning "process concat."
 
     int res = preprocessor_macro_function_push_something_definition(compiler, definition, arguments, arg_token, definition_token_vec, value_vec_target);
     if (res == -1)
@@ -1300,7 +1300,7 @@ int preprocessor_evaluate_exp(struct compile_process *compiler, struct preproces
     long left_operand = preprocessor_evaluate(compiler, node->exp.left);
     if (node->exp.right->type == PREPROCESSOR_TENARY_NODE)
     {
-#warning "handle tenary node"
+#warning "handle tenary node."
     }
 
     long right_operand = preprocessor_evaluate(compiler, node->exp.right);
@@ -1573,7 +1573,7 @@ void preprocessor_handle_token(struct compile_process *compiler, struct token *t
 }
 int preprocessor_run(struct compile_process *compiler)
 {
-#warning "add our source file as an included file"
+#warning "add our source file as an included file."
     vector_set_peek_pointer(compiler->token_vec_original, 0);
     struct token *token = preprocessor_next_token(compiler);
     while (token)
