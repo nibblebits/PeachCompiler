@@ -1246,7 +1246,7 @@ void preprocessor_handle_function_argument_to_string(struct compile_process* com
     // Lets create a string token
     struct token str_token = {0};
     str_token.type = TOKEN_TYPE_STRING;
-    str_token.sval = first_token_for_argument->between_brackets;
+    str_token.sval = first_token_for_argument->between_arguments;
     vector_push(value_vec_target, &str_token);
 }
 

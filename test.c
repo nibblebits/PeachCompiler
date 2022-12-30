@@ -1,9 +1,7 @@
-#define TEST_FUNC(s) #s
-
-
-int printf(const char* s, ...);
+#define TEST_FUNC(x) #x
+int printf(char* s, ...);
 int main()
 {
-    const char* a = TEST_FUNC(hello);
-    printf("%s\n", a);
+    const char* s = TEST_FUNC(hello world);
+    printf("%s", s);
 }

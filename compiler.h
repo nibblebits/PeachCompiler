@@ -118,6 +118,9 @@ struct token
 
     // (5+10+20)
     const char *between_brackets;
+
+    // Anything between function call arguments. ABC(hello world)
+    const char* between_arguments;
 };
 
 struct lex_process;
@@ -144,6 +147,8 @@ struct lex_process
      */
     int current_expression_count;
     struct buffer *parentheses_buffer;
+
+    struct buffer* argument_string_buffer;
     struct lex_process_functions *function;
 
     // This will be private data that the lexer does not understand
