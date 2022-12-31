@@ -899,6 +899,14 @@ void codegen_generate_normal_unary(struct node *node, struct history *history)
             asm_push_ins_push_with_data("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype = last_dtype});
         }
     }
+    else if(S_EQ(node->unary.op, "!"))
+    {
+        asm_push("cmp eax, 0");
+        asm_push("sete al");
+        asm_push("movzx eax, al");
+        asm_push_ins_push_with_data("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype=last_dtype});
+
+    }
 
 }
 void codegen_generate_unary(struct node *node, struct history *history)
