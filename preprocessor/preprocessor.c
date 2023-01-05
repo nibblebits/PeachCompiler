@@ -1351,6 +1351,60 @@ int preprocessor_evaluate_parentheses(struct compile_process* compiler, struct p
     return preprocessor_evaluate(compiler, node->parenthesis.exp);
 }
 
+const char* preprocessor_pull_string_from(struct preprocessor_node* root_node)
+{
+    const char* result = NULL;
+    switch(root_node->type)
+    {
+        case PREPROCESSOR_PARENTHESES_NODE:
+            result = preprocessor_pull_string_from(root_node->parenthesis.exp);
+            break;
+
+        case PREPROCESSOR_KEYWORD_NODE:
+        case PREPROCESSOR_IDENTIFIER_NODE:
+            result = root_node->sval;
+            break;
+
+        case PREPROCESSOR_EXPRESSION_NODE:
+            result = preprocessor_pull_string_from(root_node->exp.left);
+            break;
+    }
+
+    return result;
+}
+
+const char* preprocessor_pull_defined_value(struct compile_process* compiler, struct preprocessor_node* joined_node)
+{
+    const char* val = preprocessor_pull_string_from(joined_node->joined.right);
+    if (!val)
+    {
+        compiler_error(compiler, "Expecting an identifier node for defined keyword right operand");
+    }
+
+    return val;
+}
+
+int preprocessor_evaluate_joined_node_defined(struct compile_process* compiler, struct preprocessor_node* node)
+{
+    const char* right_val = preprocessor_pull_defined_value(compiler, node);
+    return preprocessor_get_definition(compiler->preprocessor, right_val) != NULL;
+}
+int preprocessor_evaluate_joined_node(struct compile_process* compiler, struct preprocessor_node* node)
+{
+    if (node->joined.left->type != PREPROCESSOR_KEYWORD_NODE)
+    {
+        return 0;
+    }
+
+    int res = 0;
+    if (S_EQ(node->joined.left->sval, "defined"))
+    {
+        res = preprocessor_evaluate_joined_node_defined(compiler, node);
+    }
+
+    return res;
+}
+
 int preprocessor_evaluate(struct compile_process *compiler, struct preprocessor_node *root_node)
 {
     struct preprocessor_node *current = root_node;
@@ -1375,6 +1429,10 @@ int preprocessor_evaluate(struct compile_process *compiler, struct preprocessor_
 
     case PREPROCESSOR_PARENTHESES_NODE:
         result = preprocessor_evaluate_parentheses(compiler, current);
+        break;
+
+    case PREPROCESSOR_JOINED_NODE:
+        result = preprocessor_evaluate_joined_node(compiler, current);
         break;
     }
     return result;
