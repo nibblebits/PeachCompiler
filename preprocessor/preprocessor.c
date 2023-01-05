@@ -101,6 +101,7 @@ int preprocessor_evaluate(struct compile_process *compiler, struct preprocessor_
 int preprocessor_handle_identifier_for_token_vector(struct compile_process *compiler, struct vector *src_vec, struct vector *dst_vec, struct token *token);
 struct vector *preprocessor_definition_value(struct preprocessor_definition *definition);
 void preprocessor_token_vec_push_src_resolve_definition(struct compile_process *compiler, struct vector *src_vec, struct vector *dst_vec, struct token *token);
+void preprocessor_macro_function_push_something(struct compile_process *compiler, struct preprocessor_definition *definition, struct preprocessor_function_arguments *arguments, struct token *arg_token, struct vector *definition_token_vec, struct vector *value_vec_target);
 
 void preprocessor_execute_warning(struct compile_process *compiler, const char *msg)
 {
@@ -1028,12 +1029,12 @@ void preprocessor_handle_typedef_body_for_non_struct_or_union(struct compile_pro
     }
 }
 
-void preprocessor_handle_typedef_body_for_brackets(struct compile_process* compiler, struct vector* token_vec, struct vector* src_vec, bool overflow_use_token_vec)
+void preprocessor_handle_typedef_body_for_brackets(struct compile_process *compiler, struct vector *token_vec, struct vector *src_vec, bool overflow_use_token_vec)
 {
-    struct token* token = preprocessor_next_token_with_vector(compiler, src_vec, overflow_use_token_vec);
-    while(token)
+    struct token *token = preprocessor_next_token_with_vector(compiler, src_vec, overflow_use_token_vec);
+    while (token)
     {
-        if(token_is_symbol(token, '{'))
+        if (token_is_symbol(token, '{'))
         {
             vector_push(token_vec, token);
             preprocessor_handle_typedef_body_for_brackets(compiler, token_vec, src_vec, overflow_use_token_vec);
@@ -1049,9 +1050,9 @@ void preprocessor_handle_typedef_body_for_brackets(struct compile_process* compi
         token = preprocessor_next_token_with_vector(compiler, src_vec, overflow_use_token_vec);
     }
 }
-void preprocessor_handle_typedef_body_for_struct_or_union(struct compile_process* compiler, struct vector* token_vec, struct typedef_type* td, struct vector* src_vec, bool overflow_use_token_vec)
+void preprocessor_handle_typedef_body_for_struct_or_union(struct compile_process *compiler, struct vector *token_vec, struct typedef_type *td, struct vector *src_vec, bool overflow_use_token_vec)
 {
-    struct token* token = preprocessor_next_token_with_vector(compiler, src_vec, overflow_use_token_vec);
+    struct token *token = preprocessor_next_token_with_vector(compiler, src_vec, overflow_use_token_vec);
     assert(token_is_keyword(token, "struct"));
 
     td->type = TYPEDEF_TYPE_STRUCTURE_TYPEDEF;
@@ -1075,7 +1076,7 @@ void preprocessor_handle_typedef_body_for_struct_or_union(struct compile_process
     }
 
     // Handle typedef structure with body.
-    while(token)
+    while (token)
     {
         if (token_is_symbol(token, '{'))
         {
@@ -1094,7 +1095,7 @@ void preprocessor_handle_typedef_body_for_struct_or_union(struct compile_process
 
         preprocessor_token_vec_push_src_resolve_definition(compiler, src_vec, token_vec, token);
         token = preprocessor_next_token_with_vector(compiler, src_vec, overflow_use_token_vec);
-    }    
+    }
 }
 
 void preprocessor_handle_typedef_body(struct compile_process *compiler, struct vector *token_vec, struct typedef_type *td, struct vector *src_vec, bool overflow_use_token_vec)
@@ -1112,7 +1113,7 @@ void preprocessor_handle_typedef_body(struct compile_process *compiler, struct v
     }
 }
 
-void preprocessor_token_push_semicolon(struct compile_process* compiler)
+void preprocessor_token_push_semicolon(struct compile_process *compiler)
 {
     struct token t1;
     t1.type = TOKEN_TYPE_SYMBOL;
@@ -1153,7 +1154,6 @@ void preprocessor_handle_typedef_token(struct compile_process *compiler, struct 
         token_vec = vector_create(sizeof(struct token));
         preprocessor_token_vec_push_keyword_and_identifier(token_vec, "struct", td.structure.sname);
     }
-
 
     struct preprocessor *preprocessor = compiler->preprocessor;
     preprocessor_definition_create_typedef(td.definiton_name, token_vec, preprocessor);
@@ -1211,9 +1211,69 @@ int preprocessor_macro_function_push_something_definition(struct compile_process
     // Sad day something went wrong.
     return -1;
 }
+
+void preprocessor_handle_concat_part(struct compile_process *compiler, struct preprocessor_definition *definition,
+                                     struct preprocessor_function_arguments *arguments, struct token *token, struct vector *definition_token_vec,
+                                     struct vector *value_vec_target)
+{
+    preprocessor_macro_function_push_something(compiler, definition, arguments, token, definition_token_vec, value_vec_target);
+}
+
+void preprocessor_handle_concat_finalize(struct compile_process* compiler, struct vector* tmp_vec, struct vector* value_vec_target)
+{
+    struct vector* joined_vec = tokens_join_vector(compiler, tmp_vec);
+    vector_insert(value_vec_target, joined_vec, 0);
+}
+
+void preprocessor_handle_concat(struct compile_process *compiler, struct preprocessor_definition *definition,
+                                struct preprocessor_function_arguments *arguments, struct token *arg_token, struct vector *definition_token_vec,
+                                struct vector *value_vec_target)
+{
+
+    // Lets skip the hashtags ##
+    vector_peek(definition_token_vec);
+    vector_peek(definition_token_vec);
+
+    struct token *right_token = vector_peek(definition_token_vec);
+    if (!right_token)
+    {
+        compiler_error(compiler, "No right operand provided for concat preprocessor operator ##");
+    }
+
+    struct vector *tmp_vec = vector_create(sizeof(struct token));
+    preprocessor_handle_concat_part(compiler, definition, arguments, arg_token, definition_token_vec, tmp_vec);
+    preprocessor_handle_concat_part(compiler, definition, arguments, right_token, definition_token_vec, tmp_vec);
+    preprocessor_handle_concat_finalize(compiler, tmp_vec, value_vec_target);
+}
+bool preprocessor_is_next_double_hash(struct vector *definition_token_vec)
+{
+    bool is_double_hash = true;
+    vector_save(definition_token_vec);
+    struct token *next_token = vector_peek(definition_token_vec);
+    if (!token_is_symbol(next_token, '#'))
+    {
+        is_double_hash = false;
+        goto out;
+    }
+
+    next_token = vector_peek(definition_token_vec);
+    if (!token_is_symbol(next_token, '#'))
+    {
+        is_double_hash = false;
+        goto out;
+    }
+
+out:
+    vector_restore(definition_token_vec);
+    return is_double_hash;
+}
 void preprocessor_macro_function_push_something(struct compile_process *compiler, struct preprocessor_definition *definition, struct preprocessor_function_arguments *arguments, struct token *arg_token, struct vector *definition_token_vec, struct vector *value_vec_target)
 {
-#warning "process concat"
+    if (preprocessor_is_next_double_hash(definition_token_vec))
+    {
+        preprocessor_handle_concat(compiler, definition, arguments, arg_token, definition_token_vec, value_vec_target);
+        return;
+    }
 
     int res = preprocessor_macro_function_push_something_definition(compiler, definition, arguments, arg_token, definition_token_vec, value_vec_target);
     if (res == -1)
@@ -1222,9 +1282,9 @@ void preprocessor_macro_function_push_something(struct compile_process *compiler
     }
 }
 
-void preprocessor_handle_function_argument_to_string(struct compile_process* compiler, struct vector* src_vec, struct vector* value_vec_target, struct preprocessor_definition* definition, struct preprocessor_function_arguments* arguments)
+void preprocessor_handle_function_argument_to_string(struct compile_process *compiler, struct vector *src_vec, struct vector *value_vec_target, struct preprocessor_definition *definition, struct preprocessor_function_arguments *arguments)
 {
-    struct token* next_token = vector_peek(src_vec);
+    struct token *next_token = vector_peek(src_vec);
     if (!next_token || next_token->type != TOKEN_TYPE_IDENTIFIER)
     {
         compiler_error(compiler, "No macro function argument was provided to convert to a string");
@@ -1236,13 +1296,13 @@ void preprocessor_handle_function_argument_to_string(struct compile_process* com
         compiler_error(compiler, "Unexpected macro function argument %s", next_token->sval);
     }
 
-    struct preprocessor_function_argument* argument = preprocessor_function_argument_at(arguments, argument_index);
+    struct preprocessor_function_argument *argument = preprocessor_function_argument_at(arguments, argument_index);
     if (!argument)
     {
         compiler_error(compiler, "BUG: argument exists but failed to pull");
     }
 
-    struct token* first_token_for_argument = vector_peek_at(argument->tokens, 0);
+    struct token *first_token_for_argument = vector_peek_at(argument->tokens, 0);
     // Lets create a string token
     struct token str_token = {0};
     str_token.type = TOKEN_TYPE_STRING;
@@ -1275,14 +1335,13 @@ int preprocessor_macro_function_execute(struct compile_process *compiler, const 
     struct token *token = vector_peek(definition_token_vec);
     while (token)
     {
-        if(token_is_symbol(token, '#'))
+        if (token_is_symbol(token, '#'))
         {
             preprocessor_handle_function_argument_to_string(compiler, definition_token_vec, value_vec_target, definition, arguments);
             token = vector_peek(definition_token_vec);
             continue;
         }
 
-        
         preprocessor_macro_function_push_something(compiler, definition, arguments, token, definition_token_vec, value_vec_target);
         token = vector_peek(definition_token_vec);
     }
@@ -1323,27 +1382,26 @@ int preprocessor_evaluate_exp(struct compile_process *compiler, struct preproces
         {
             return preprocessor_evaluate(compiler, node->exp.right->tenary.false_node);
         }
-
     }
 
     long right_operand = preprocessor_evaluate(compiler, node->exp.right);
     return preprocessor_arithmetic(compiler, left_operand, right_operand, node->exp.op);
 }
 
-int preprocessor_evaluate_unary(struct compile_process* compiler, struct preprocessor_node* node)
+int preprocessor_evaluate_unary(struct compile_process *compiler, struct preprocessor_node *node)
 {
     int res = 0;
-    const char* op = node->unary_node.op;
-    struct preprocessor_node* right_operand = node->unary_node.operand_node;
+    const char *op = node->unary_node.op;
+    struct preprocessor_node *right_operand = node->unary_node.operand_node;
     if (S_EQ(op, "!"))
     {
         res = !preprocessor_evaluate(compiler, right_operand);
     }
-    else if(S_EQ(op, "~"))
+    else if (S_EQ(op, "~"))
     {
         res = ~preprocessor_evaluate(compiler, right_operand);
     }
-    else if(S_EQ(op, "-"))
+    else if (S_EQ(op, "-"))
     {
         res = -preprocessor_evaluate(compiler, right_operand);
     }
@@ -1354,36 +1412,36 @@ int preprocessor_evaluate_unary(struct compile_process* compiler, struct preproc
     return res;
 }
 
-int preprocessor_evaluate_parentheses(struct compile_process* compiler, struct preprocessor_node* node)
+int preprocessor_evaluate_parentheses(struct compile_process *compiler, struct preprocessor_node *node)
 {
     return preprocessor_evaluate(compiler, node->parenthesis.exp);
 }
 
-const char* preprocessor_pull_string_from(struct preprocessor_node* root_node)
+const char *preprocessor_pull_string_from(struct preprocessor_node *root_node)
 {
-    const char* result = NULL;
-    switch(root_node->type)
+    const char *result = NULL;
+    switch (root_node->type)
     {
-        case PREPROCESSOR_PARENTHESES_NODE:
-            result = preprocessor_pull_string_from(root_node->parenthesis.exp);
-            break;
+    case PREPROCESSOR_PARENTHESES_NODE:
+        result = preprocessor_pull_string_from(root_node->parenthesis.exp);
+        break;
 
-        case PREPROCESSOR_KEYWORD_NODE:
-        case PREPROCESSOR_IDENTIFIER_NODE:
-            result = root_node->sval;
-            break;
+    case PREPROCESSOR_KEYWORD_NODE:
+    case PREPROCESSOR_IDENTIFIER_NODE:
+        result = root_node->sval;
+        break;
 
-        case PREPROCESSOR_EXPRESSION_NODE:
-            result = preprocessor_pull_string_from(root_node->exp.left);
-            break;
+    case PREPROCESSOR_EXPRESSION_NODE:
+        result = preprocessor_pull_string_from(root_node->exp.left);
+        break;
     }
 
     return result;
 }
 
-const char* preprocessor_pull_defined_value(struct compile_process* compiler, struct preprocessor_node* joined_node)
+const char *preprocessor_pull_defined_value(struct compile_process *compiler, struct preprocessor_node *joined_node)
 {
-    const char* val = preprocessor_pull_string_from(joined_node->joined.right);
+    const char *val = preprocessor_pull_string_from(joined_node->joined.right);
     if (!val)
     {
         compiler_error(compiler, "Expecting an identifier node for defined keyword right operand");
@@ -1392,12 +1450,12 @@ const char* preprocessor_pull_defined_value(struct compile_process* compiler, st
     return val;
 }
 
-int preprocessor_evaluate_joined_node_defined(struct compile_process* compiler, struct preprocessor_node* node)
+int preprocessor_evaluate_joined_node_defined(struct compile_process *compiler, struct preprocessor_node *node)
 {
-    const char* right_val = preprocessor_pull_defined_value(compiler, node);
+    const char *right_val = preprocessor_pull_defined_value(compiler, node);
     return preprocessor_get_definition(compiler->preprocessor, right_val) != NULL;
 }
-int preprocessor_evaluate_joined_node(struct compile_process* compiler, struct preprocessor_node* node)
+int preprocessor_evaluate_joined_node(struct compile_process *compiler, struct preprocessor_node *node)
 {
     if (node->joined.left->type != PREPROCESSOR_KEYWORD_NODE)
     {
@@ -1664,7 +1722,6 @@ void preprocessor_handle_keyword(struct compile_process *compiler, struct token 
     // This is not for us to deal with
     preprocessor_token_push_dst(compiler, token);
 }
-
 
 void preprocessor_handle_token(struct compile_process *compiler, struct token *token)
 {

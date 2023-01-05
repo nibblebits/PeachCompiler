@@ -1,4 +1,6 @@
+#define TEST(a, b) a ## b
+int printf(const char* fmt, int a);
 int main()
-{
-    return !0;
+{   
+    printf("%i", TEST(50, 20));
 }

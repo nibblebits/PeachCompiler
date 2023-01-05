@@ -5,6 +5,9 @@
 #include <stdbool.h>
 #include <string.h>
 #include <linux/limits.h>
+#include <assert.h>
+
+#define FAIL_ERR(message) assert(0 == 1 && message)
 
 #define S_EQ(str, str2) \
     (str && str2 && (strcmp(str, str2) == 0))
@@ -1198,6 +1201,7 @@ struct lex_process *tokens_build_for_string(struct compile_process *compiler, co
 bool token_is_keyword(struct token *token, const char *value);
 bool token_is_identifier(struct token *token);
 bool token_is_symbol(struct token *token, char c);
+struct vector* tokens_join_vector(struct compile_process* compiler, struct vector* token_vec);
 
 bool token_is_nl_or_comment_or_newline_seperator(struct token *token);
 bool keyword_is_datatype(const char *str);
