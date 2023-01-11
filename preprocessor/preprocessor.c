@@ -240,7 +240,7 @@ void preprocessor_initialize(struct preprocessor *preprocessor)
     memset(preprocessor, 0, sizeof(struct preprocessor));
     preprocessor->definitions = vector_create(sizeof(struct preprocessor_definition *));
     preprocessor->includes = vector_create(sizeof(struct preprocessor_included_file *));
-#warning "Create preprocessor default definitions"
+    preprocessor_create_definitions(preprocessor);
 }
 
 struct preprocessor *preprocessor_create(struct compile_process *compiler)
@@ -624,6 +624,22 @@ struct preprocessor_definition *preprocessor_definition_create(const char *name,
         definition->type = PREPROCESSOR_DEFINITION_MACRO_FUNCTION;
     }
 
+    vector_push(preprocessor->definitions, &definition);
+    return definition;
+}
+
+
+struct preprocessor_definition *preprocessor_definition_create_native(const char *name,
+                                                                      PREPROCESSOR_DEFINITION_NATIVE_CALL_EVALUATE evaluate,
+                                                                      PREPROCESSOR_DEFINITION_NATIVE_CALL_VALUE value,
+                                                                      struct preprocessor *preprocessor)
+{
+    struct preprocessor_definition* definition = calloc(sizeof(struct preprocessor_definition), 1);
+    definition->type = PREPROCESSOR_DEFINITION_NATIVE_CALLBACK;
+    definition->name = name;
+    definition->native.evaluate = evaluate;
+    definition->native.value = value;
+    definition->preprocessor = preprocessor;
     vector_push(preprocessor->definitions, &definition);
     return definition;
 }
@@ -1219,9 +1235,9 @@ void preprocessor_handle_concat_part(struct compile_process *compiler, struct pr
     preprocessor_macro_function_push_something(compiler, definition, arguments, token, definition_token_vec, value_vec_target);
 }
 
-void preprocessor_handle_concat_finalize(struct compile_process* compiler, struct vector* tmp_vec, struct vector* value_vec_target)
+void preprocessor_handle_concat_finalize(struct compile_process *compiler, struct vector *tmp_vec, struct vector *value_vec_target)
 {
-    struct vector* joined_vec = tokens_join_vector(compiler, tmp_vec);
+    struct vector *joined_vec = tokens_join_vector(compiler, tmp_vec);
     vector_insert(value_vec_target, joined_vec, 0);
 }
 

@@ -1374,6 +1374,16 @@ int align_value(int val, int to);
 int align_value_treat_positive(int val, int to);
 int compute_sum_padding(struct vector *vec);
 
+// Preprocessor
+void preprocessor_create_definitions(struct preprocessor* preprocessor);
+struct token *preprocessor_previous_token(struct compile_process *compiler);
+struct vector *preprocessor_build_value_vector_for_integer(int value);
+struct preprocessor_definition *preprocessor_definition_create_native(const char *name,
+                                                                      PREPROCESSOR_DEFINITION_NATIVE_CALL_EVALUATE evaluate,
+                                                                      PREPROCESSOR_DEFINITION_NATIVE_CALL_VALUE value,
+                                                                      struct preprocessor *preprocessor);
+
+
 struct scope *scope_new(struct compile_process *process, int flags);
 struct scope *scope_create_root(struct compile_process *process);
 void scope_free_root(struct compile_process *process);
