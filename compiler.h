@@ -1172,6 +1172,9 @@ enum
 
 int compile_file(const char *filename, const char *out_filename, int flags);
 struct compile_process *compile_process_create(const char *filename, const char *filename_out, int flags, struct compile_process* parent_process);
+const char* compiler_include_dir_begin(struct compile_process* process);
+const char* compiler_include_dir_next(struct compile_process* process);
+void compiler_setup_default_include_directories(struct vector* include_vec);
 
 char compile_process_next_char(struct lex_process *lex_process);
 char compile_process_peek_char(struct lex_process *lex_process);
@@ -1373,6 +1376,7 @@ int padding(int val, int to);
 int align_value(int val, int to);
 int align_value_treat_positive(int val, int to);
 int compute_sum_padding(struct vector *vec);
+
 
 // Preprocessor
 void preprocessor_create_definitions(struct preprocessor* preprocessor);
@@ -1597,5 +1601,10 @@ struct fixup *fixup_register(struct fixup_system *system, struct fixup_config *c
 bool fixup_resolve(struct fixup *fixup);
 void *fixup_private(struct fixup *fixup);
 bool fixups_resolve(struct fixup_system *system);
+
+
+
+// Helpers
+bool file_exists(const char* filename);
 
 #endif
