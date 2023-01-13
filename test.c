@@ -1,7 +1,5 @@
-int y = 3;
-int x = __LINE__;
-
+#include <stdarg.h>
 int main()
 {
-    return __LINE__;
+    return ABC;
 }

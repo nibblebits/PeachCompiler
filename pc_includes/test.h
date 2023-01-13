@@ -1,0 +1,1 @@
+#define ABC 50
