@@ -325,6 +325,11 @@ struct preprocessor_included_file
     char filename[PATH_MAX];
 };
 
+
+// Function pointers
+typedef void(*PREPROCESSOR_STATIC_INCLUDE_HANDLER_POST_CREATION)(struct preprocessor* preprocessor, struct preprocessor_included_file* included_file);
+PREPROCESSOR_STATIC_INCLUDE_HANDLER_POST_CREATION preprocessor_static_include_handler_for(const char* filename);
+
 struct preprocessor
 {
     // A vector of struct preprocessor_definition*

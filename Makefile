@@ -1,4 +1,4 @@
-OBJECTS= ./build/compiler.o ./build/cprocess.o ./build/rdefault.o ./build/lexer.o ./build/token.o ./build/lex_process.o ./build/parser.o ./build/scope.o ./build/symresolver.o ./build/codegen.o ./build/stackframe.o ./build/resolver.o ./build/fixup.o ./build/array.o ./build/datatype.o ./build/node.o ./build/expressionable.o ./build/helper.o ./build/helpers/buffer.o ./build/helpers/vector.o ./build/preprocessor.o ./build/native.o
+OBJECTS= ./build/compiler.o ./build/cprocess.o ./build/rdefault.o ./build/lexer.o ./build/token.o ./build/lex_process.o ./build/parser.o ./build/scope.o ./build/symresolver.o ./build/codegen.o ./build/stackframe.o ./build/resolver.o ./build/fixup.o ./build/array.o ./build/datatype.o ./build/node.o ./build/expressionable.o ./build/helper.o ./build/helpers/buffer.o ./build/helpers/vector.o ./build/preprocessor/preprocessor.o ./build/preprocessor/static-include.o ./build/preprocessor/static-includes/stdarg.o ./build/preprocessor/static-includes/stddef.o ./build/preprocessor/native.o
 INCLUDES= -I./
 
 all: ${OBJECTS}
@@ -61,11 +61,23 @@ all: ${OBJECTS}
 	gcc datatype.c ${INCLUDES} -o ./build/datatype.o -g -c
 
 
-./build/preprocessor.o: ./preprocessor/preprocessor.c
-	gcc ./preprocessor/preprocessor.c ${INCLUDES} -o ./build/preprocessor.o -g -c
+./build/preprocessor/preprocessor.o: ./preprocessor/preprocessor.c
+	gcc ./preprocessor/preprocessor.c ${INCLUDES} -o ./build/preprocessor/preprocessor.o -g -c
 
-./build/native.o: ./preprocessor/native.c
-	gcc ./preprocessor/native.c ${INCLUDES} -o ./build/native.o -g -c
+./build/preprocessor/static-includes/stdarg.o: ./preprocessor/static-includes/stdarg.c
+	gcc ./preprocessor/static-includes/stdarg.c ${INCLUDES} -o ./build/preprocessor/static-includes/stdarg.o -g -c
+
+./build/preprocessor/static-includes/stddef.o: ./preprocessor/static-includes/stddef.c
+	gcc ./preprocessor/static-includes/stddef.c ${INCLUDES} -o ./build/preprocessor/static-includes/stddef.o -g -c
+
+
+
+
+./build/preprocessor/static-include.o: ./preprocessor/static-include.c
+	gcc ./preprocessor/static-include.c ${INCLUDES} -o ./build/preprocessor/static-include.o -g -c
+
+./build/preprocessor/native.o: ./preprocessor/native.c
+	gcc ./preprocessor/native.c ${INCLUDES} -o ./build/preprocessor/native.o -g -c
 
 
 

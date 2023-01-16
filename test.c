@@ -1,4 +1,4 @@
-#include <stdarg.h>
+#include <stdarg-internal.h>
 int main()
 {
     return ABC;
