@@ -1850,9 +1850,24 @@ void parse_for_tenary(struct history *history)
     make_exp_node(condition_node, tenary_node, "?");
 }
 
+void parse_sizeof(struct history* history)
+{
+    expect_keyword("sizeof");
+    expect_op("(");
+    struct datatype dtype;
+    parse_datatype(&dtype);
+    node_create(&(struct node){NODE_TYPE_NUMBER,.llnum=datatype_size(&dtype)});
+    expect_sym(')');
+}
+
 void parse_keyword(struct history *history)
 {
     struct token *token = token_peek_next();
+    if (S_EQ(token->sval, "sizeof"))
+    {
+        parse_sizeof(history);
+        return;
+    }
     if (is_keyword_variable_modifier(token->sval) || keyword_is_datatype(token->sval))
     {
         parse_variable_function_or_struct_union(history);

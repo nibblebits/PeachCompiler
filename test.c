@@ -1,5 +1,12 @@
-#include <stdarg-internal.h>
+
+struct dog
+{
+    int x;
+    int y;
+};
+
 int main()
 {
-    return ABC;
+    
+    return sizeof(struct dog);
 }
