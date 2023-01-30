@@ -8,5 +8,5 @@ struct dog
 int main()
 {
     
-    return sizeof(struct dog);
+    return &((struct dog*)0x00)->y;
 }
