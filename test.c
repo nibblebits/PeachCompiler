@@ -1,4 +1,4 @@
-
+#include <stddef.h>
 struct dog
 {
     int x;
@@ -8,5 +8,5 @@ struct dog
 int main()
 {
     
-    return &((struct dog*)0x00)->y;
+    return offsetof(struct dog, y);
 }
