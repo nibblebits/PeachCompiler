@@ -6,9 +6,34 @@
 
 #define STRUCTURE_PUSH_START_POSITION_ONE 1
 
+
 static struct compile_process *current_process = NULL;
 static struct node *current_function = NULL;
 
+void asm_push(const char *ins, ...);
+struct _x86_generator_private* x86_generator_private(struct generator* generator);
+void codegen_gen_exp(struct generator* generator, struct node* node, int flags);
+void codegen_end_exp(struct generator* generator);
+void codegen_entity_address(struct generator* generator, struct resolver_entity* entity, struct generator_entity_address* address_out);
+
+
+struct history;
+struct _x86_generator_private
+{
+    struct x86_generator_remembered
+    {
+        struct history* history;
+    } remembered;
+
+} _x86_generator_private;
+
+struct generator x86_codegen = {
+    .asm_push=asm_push,
+    .gen_exp=codegen_gen_exp,
+    .end_exp=codegen_end_exp,
+    .entity_address=codegen_entity_address,
+    .private=&_x86_generator_private
+};
 enum
 {
     CODEGEN_ENTITY_RULE_IS_STRUCT_OR_UNION_NON_POINTER = 0b00000001,
@@ -150,6 +175,15 @@ struct node *codegen_node_next()
 struct resolver_default_entity_data *codegen_entity_private(struct resolver_entity *entity)
 {
     return resolver_default_entity_private(entity);
+}
+
+void codegen_entity_address(struct generator* generator, struct resolver_entity* entity, struct generator_entity_address* address_out)
+{
+    struct resolver_default_entity_data* data = codegen_entity_private(entity);
+    address_out->address = data->address;
+    address_out->base_address = data->base_address;
+    address_out->is_stack = data->flags & RESOLVER_DEFAULT_ENTITY_FLAG_IS_LOCAL_STACK;
+    address_out->offset = data->offset;
 }
 
 void asm_push_args(const char *ins, va_list args)
@@ -984,6 +1018,7 @@ void codegen_generate_cast(struct node *node, struct history *history)
     asm_push_ins_push_with_data("eax", STACK_FRAME_ELEMENT_TYPE_PUSHED_VALUE, "result_value", 0, &(struct stack_frame_data){.dtype = node->cast.dtype});
 }
 
+
 void codegen_generate_expressionable(struct node *node, struct history *history)
 {
     bool is_root = codegen_is_exp_root(history);
@@ -1024,6 +1059,22 @@ void codegen_generate_expressionable(struct node *node, struct history *history)
         codegen_generate_cast(node, history);
         break;
     }
+}
+
+
+struct _x86_generator_private* x86_generator_private(struct generator* generator)
+{
+    return generator->private;
+}
+
+void codegen_gen_exp(struct generator* generator, struct node* node, int flags)
+{
+    codegen_generate_expressionable(node, history_down(x86_generator_private(generator)->remembered.history, flags));
+}
+
+void codegen_end_exp(struct generator* generator)
+{
+    
 }
 
 const char *codegen_sub_register(const char *original_register, size_t size)
@@ -2477,6 +2528,7 @@ void codegen_generate_data_section_add_ons()
 int codegen(struct compile_process *process)
 {
     current_process = process;
+    x86_codegen.compiler = current_process;
     scope_create_root(process);
     vector_set_peek_pointer(process->node_tree_vec, 0);
     codegen_new_scope(0);

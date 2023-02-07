@@ -252,6 +252,59 @@ struct code_generator
 
 struct resolver_process;
 
+struct generator;
+struct native_function;
+struct node;
+struct resolver_entity;
+
+struct generator_entity_address
+{
+    bool is_stack;
+    long offset;
+    const char* address;
+    const char* base_address;
+};
+
+#define GENERATOR_BEGIN_EXPRESSION(gen)
+#define GENERATOR_END_EXPRESSION(gen) gen->end_exp(gen)
+
+
+typedef void(*ASM_PUSH_PROTOTYPE)(const char* ins, ...);
+typedef void (*NATIVE_FUNCTION_CALL)(struct generator* generator, struct node* orinating_function, struct native_function* func, struct vector* arguments);
+typedef void(*GENERATOR_GENERATE_EXPRESSION)(struct generator* generator, struct node* node, int flags);
+typedef void (*GENERATOR_ENTITY_ADDRESS)(
+    struct generator* generator, struct resolver_entity* entity, 
+    struct generator_entity_address* address_out);
+typedef void(*GENERATOR_END_EXPRESSION)(struct generator* generator);
+
+struct generator
+{
+    ASM_PUSH_PROTOTYPE asm_push;
+    GENERATOR_GENERATE_EXPRESSION gen_exp;
+    GENERATOR_END_EXPRESSION end_exp;
+    GENERATOR_ENTITY_ADDRESS entity_address;
+
+    struct compile_process* compiler;
+
+
+    // Private data for the generator
+    void* private;
+};
+
+struct native_function_callbacks
+{
+    NATIVE_FUNCTION_CALL call;
+};
+
+struct native_function
+{
+    const char* name;
+    struct native_function_callbacks callbacks;
+};
+
+struct symbol* native_create_function(struct compile_process* compiler, const char* name,
+ struct native_function_callbacks* callbacks);
+
 struct preprocessor;
 struct preprocessor_definition;
 struct preprocessor_function_argument;
@@ -1413,6 +1466,8 @@ void symresolver_initialize(struct compile_process *process);
 void symresolver_new_table(struct compile_process *process);
 void symresolver_end_table(struct compile_process *process);
 void symresolver_build_for_node(struct compile_process *process, struct node *node);
+struct symbol* symresolver_register_symbol(struct compile_process* process, const char* sym_name, int type, void* data);
+
 struct symbol *symresolver_get_symbol(struct compile_process *process, const char *name);
 struct symbol *symresolver_get_symbol_for_native_function(struct compile_process *process, const char *name);
 
