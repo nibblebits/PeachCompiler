@@ -1085,7 +1085,7 @@ struct _x86_generator_private* x86_generator_private(struct generator* generator
 
 void codegen_gen_exp(struct generator* generator, struct node* node, int flags)
 {
-    codegen_generate_expressionable(node, history_down(x86_generator_private(generator)->remembered.history, flags));
+    codegen_generate_expressionable(node, history_begin(flags));
 }
 
 void codegen_end_exp(struct generator* generator)
