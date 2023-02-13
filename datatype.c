@@ -22,6 +22,12 @@ size_t datatype_size_for_array_access(struct datatype* dtype)
     return datatype_size(dtype);
 }
 
+void datatype_set_void(struct datatype* dtype)
+{
+    dtype->type = DATA_TYPE_VOID;
+    dtype->type_str = "void";
+    dtype->size = 0;
+}
 size_t datatype_element_size(struct datatype* dtype)
 {
     if (dtype->flags & DATATYPE_FLAG_IS_POINTER)

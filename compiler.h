@@ -256,6 +256,7 @@ struct generator;
 struct native_function;
 struct node;
 struct resolver_entity;
+struct datatype;
 
 struct generator_entity_address
 {
@@ -270,12 +271,14 @@ struct generator_entity_address
 
 
 typedef void(*ASM_PUSH_PROTOTYPE)(const char* ins, ...);
-typedef void (*NATIVE_FUNCTION_CALL)(struct generator* generator, struct node* orinating_function, struct native_function* func, struct vector* arguments);
+typedef void (*NATIVE_FUNCTION_CALL)(struct generator* generator, struct native_function* func, struct vector* arguments);
 typedef void(*GENERATOR_GENERATE_EXPRESSION)(struct generator* generator, struct node* node, int flags);
 typedef void (*GENERATOR_ENTITY_ADDRESS)(
     struct generator* generator, struct resolver_entity* entity, 
     struct generator_entity_address* address_out);
 typedef void(*GENERATOR_END_EXPRESSION)(struct generator* generator);
+
+typedef void(*GENERATOR_FUNCTION_RETURN)(struct datatype* dtype, const char* fmt, ...);
 
 struct generator
 {
@@ -283,6 +286,7 @@ struct generator
     GENERATOR_GENERATE_EXPRESSION gen_exp;
     GENERATOR_END_EXPRESSION end_exp;
     GENERATOR_ENTITY_ADDRESS entity_address;
+    GENERATOR_FUNCTION_RETURN ret;
 
     struct compile_process* compiler;
 
@@ -304,6 +308,8 @@ struct native_function
 
 struct symbol* native_create_function(struct compile_process* compiler, const char* name,
  struct native_function_callbacks* callbacks);
+
+struct native_function* native_function_get(struct compile_process* compiler, const char* name);
 
 struct preprocessor;
 struct preprocessor_definition;
@@ -867,6 +873,7 @@ enum
 {
     RESOLVER_ENTITY_TYPE_VARIABLE,
     RESOLVER_ENTITY_TYPE_FUNCTION,
+    RESOLVER_ENTITY_TYPE_NATIVE_FUNCTION,
     RESOLVER_ENTITY_TYPE_STRUCTURE,
     RESOLVER_ENTITY_TYPE_FUNCTION_CALL,
     RESOLVER_ENTITY_TYPE_ARRAY_BRACKET,
@@ -1074,6 +1081,11 @@ struct resolver_entity
             // How much is the depth we need to find the value.
             int depth;
         } indirection;
+
+        struct resolver_native_function
+        {
+            struct symbol* symbol;
+        } native_func;
     };
 
     struct entity_last_resolve
@@ -1270,6 +1282,7 @@ bool token_is_nl_or_comment_or_newline_seperator(struct token *token);
 bool keyword_is_datatype(const char *str);
 bool token_is_primitive_keyword(struct token *token);
 
+void datatype_set_void(struct datatype* dtype);
 bool datatype_is_struct_or_union_for_name(const char *name);
 size_t datatype_size_for_array_access(struct datatype *dtype);
 size_t datatype_element_size(struct datatype *dtype);
