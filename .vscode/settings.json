@@ -2,6 +2,7 @@
     "files.associations": {
         "vector.h": "c",
         "compiler.h": "c",
-        "stdarg.h": "c"
+        "stdarg.h": "c",
+        "cstdio": "cpp"
     }
 }
