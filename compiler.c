@@ -113,6 +113,11 @@ int compile_file(const char* filename, const char* out_filename, int flags)
         return COMPILER_FAILED_WITH_ERRORS;
     }
 
+    if (validate(process) != VALIDATION_ALL_OK)
+    {
+        return COMPILER_FAILED_WITH_ERRORS;
+    }
+    
     if (codegen(process) != CODEGEN_ALL_OK)
     {
         return COMPILER_FAILED_WITH_ERRORS;

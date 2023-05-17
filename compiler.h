@@ -463,6 +463,12 @@ enum
 
 enum
 {
+    VALIDATION_ALL_OK,
+    VALIDATION_GENERAL_ERROR
+};
+
+enum
+{
     CODEGEN_ALL_OK,
     CODEGEN_GENERAL_ERROR
 };
@@ -1263,6 +1269,11 @@ int lex(struct lex_process *process);
 int parse(struct compile_process *process);
 int codegen(struct compile_process *process);
 struct code_generator *codegenerator_new(struct compile_process *process);
+
+
+// Validator
+
+int validate(struct compile_process* process);
 
 /**
  * @brief Builds tokens for the input string.
