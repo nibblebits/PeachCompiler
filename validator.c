@@ -32,8 +32,90 @@ void validate_destruct(struct compile_process* process)
     vector_set_peek_pointer(process->node_tree_vec, 0);
 }
 
+void validate_symbol_unique(const char* name, const char* type_of_symbol, struct node* node)
+{
+    struct symbol* sym = symresolver_get_symbol(validator_current_compile_process, name);
+    if (sym)
+    {
+        compiler_node_error(node, "Cannot define %s you have already defined a symbol with the name %s", type_of_symbol, name);
+    }
+}
+
+void validate_body(struct body* body)
+{
+    vector_set_peek_pointer(body->statements, 0);
+    struct node* statement = vector_peek_ptr(body->statements);
+    while(statement)
+    {
+        // validate the statement
+        statement = vector_peek_ptr(body->statements);
+    }
+}
+
+void validate_function_body(struct node* node)
+{
+    validate_body(&node->body);
+}
+
+void validate_function_argument(struct node* func_argument_var_node)
+{
+    //validate_variable
+}
+
+void validate_function_arguments(struct function_arguments* func_arguments)
+{
+    struct vector* func_arg_vec = func_arguments->vector;
+    vector_set_peek_pointer(func_arg_vec, 0);
+    struct node* current = vector_peek_ptr(func_arg_vec);
+    while(current)
+    {
+        validate_function_argument(current);
+        current = vector_peek_ptr(func_arg_vec);
+    }
+}
+void validate_function_node(struct node* node)
+{
+    current_function = node;
+    if (!(node->flags & NODE_FLAG_IS_FORWARD_DECLARATION))
+    {
+        validate_symbol_unique(node->func.name, "function", node);
+    }
+
+    symresolver_register_symbol(validator_current_compile_process, node->func.name, SYMBOL_TYPE_NODE, node);
+    validation_new_scope(0);
+    // Validate the function arguments
+    validate_function_arguments(&node->func.args);
+
+    // validate the function body.
+    if (node->func.body_n)
+    {
+        validate_function_body(node->func.body_n);
+    }
+    validation_end_scope();
+
+    current_function = NULL;
+}
+
+void validate_node(struct node* node)
+{
+    switch(node->type)
+    {
+        case NODE_TYPE_FUNCTION:
+        validate_function_node(node);
+        break;
+    }
+}
+
 int validate_tree()
 {
+    validation_new_scope(0);
+    struct node* node = validation_next_tree_node();
+    while(node)
+    {
+        validate_node(node);
+        node = validation_next_tree_node();
+    }
+    validation_end_scope();
     return VALIDATION_ALL_OK;
 }
 

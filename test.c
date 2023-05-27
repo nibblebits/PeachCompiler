@@ -1,7 +1,10 @@
-#include <stdio.h>
 
-int main()
+int test()
 {
-    FILE* f = fopen("./testing.txt", "w");
-    fwrite("hello", 5, 1, f);
+
+}
+
+int test()
+{
+   return 0;
 }
