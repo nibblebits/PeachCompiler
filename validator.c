@@ -172,12 +172,42 @@ void validate_function_node(struct node* node)
     current_function = NULL;
 }
 
+void validate_structure_node(struct node* node)
+{
+    if (!(node->flags & NODE_FLAG_IS_FORWARD_DECLARATION))
+    {
+        validate_symbol_unique(node->_struct.name, "struct", node);
+    }
+    symresolver_register_symbol(validator_current_compile_process, node->_struct.name, SYMBOL_TYPE_NODE, node);
+
+}
+
+void validate_union_node(struct node* node)
+{
+    if (!(node->flags & NODE_FLAG_IS_FORWARD_DECLARATION))
+    {
+        validate_symbol_unique(node->_union.name, "union", node);
+    }
+    symresolver_register_symbol(validator_current_compile_process, node->_union.name, SYMBOL_TYPE_NODE, node);
+
+}
+
+
+
 void validate_node(struct node* node)
 {
     switch(node->type)
     {
         case NODE_TYPE_FUNCTION:
         validate_function_node(node);
+        break;
+
+        case NODE_TYPE_STRUCT:
+        validate_structure_node(node);
+        break;
+
+        case NODE_TYPE_UNION:
+        validate_union_node(node);
         break;
     }
 }
