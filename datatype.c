@@ -22,6 +22,11 @@ size_t datatype_size_for_array_access(struct datatype* dtype)
     return datatype_size(dtype);
 }
 
+bool datatype_is_void_no_ptr(struct datatype* dtype)
+{
+    return S_EQ(dtype->type_str, "void") && !(dtype->flags & DATATYPE_FLAG_IS_POINTER);
+}
+
 void datatype_set_void(struct datatype* dtype)
 {
     dtype->type = DATA_TYPE_VOID;

@@ -1294,6 +1294,7 @@ bool token_is_nl_or_comment_or_newline_seperator(struct token *token);
 bool keyword_is_datatype(const char *str);
 bool token_is_primitive_keyword(struct token *token);
 
+bool datatype_is_void_no_ptr(struct datatype* dtype);
 void datatype_set_void(struct datatype* dtype);
 bool datatype_is_struct_or_union_for_name(const char *name);
 size_t datatype_size_for_array_access(struct datatype *dtype);
