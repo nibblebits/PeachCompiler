@@ -1749,6 +1749,10 @@ int codegen_set_flag_for_operator(const char *op)
     {
         flag |= EXPRESSION_LOGICAL_AND;
     }
+    else if (S_EQ(op, "||"))
+    {
+        flag |= EXPRESSION_LOGICAL_OR;
+    }
     else if (S_EQ(op, "<<"))
     {
         flag |= EXPRESSION_IS_BITSHIFT_LEFT;
