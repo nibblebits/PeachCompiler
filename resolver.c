@@ -713,7 +713,7 @@ void resolver_build_function_call_arguments(struct resolver_process *resolver, s
         struct datatype *dtype = resolver_get_datatype(resolver, argument_node);
         if (dtype)
         {
-            // 4 bytes unless its a structure
+            // 4 bytes unless it's a structure
             stack_change = datatype_element_size(dtype);
             if (stack_change < DATA_SIZE_DWORD)
             {
