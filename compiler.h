@@ -675,11 +675,11 @@ struct node
             struct node *val;
         } var;
 
-        struct node_tenary
+        struct node_ternary
         {
             struct node *true_node;
             struct node *false_node;
-        } tenary;
+        } ternary;
 
         struct varlist
         {
@@ -1329,7 +1329,7 @@ bool op_is_address(const char *op);
 struct node *struct_node_for_name(struct compile_process *current_process, const char *name);
 struct node *union_node_for_name(struct compile_process *current_process, const char *name);
 
-void make_tenary_node(struct node *true_node, struct node *false_node);
+void make_ternary_node(struct node *true_node, struct node *false_node);
 
 void make_default_node();
 void make_case_node(struct node *exp_node);
@@ -1535,7 +1535,7 @@ void expressionable_parse_for_indirection_unary(struct expressionable *expressio
 void expressionable_parse_for_normal_unary(struct expressionable *expressionable);
 void expressionable_parse_unary(struct expressionable *expressionable);
 void expressionable_parse_for_operator(struct expressionable *expressionable);
-void expressionable_parse_tenary(struct expressionable* expressionable);
+void expressionable_parse_ternary(struct expressionable* expressionable);
 int expressionable_parse_exp(struct expressionable *expressionable, struct token *token);
 int expressionable_parse_token(struct expressionable *expressionable, struct token *token, int flags);
 int expressionable_parse_single_with_flags(struct expressionable *expressionable, int flags);
@@ -1610,7 +1610,7 @@ struct expressionable_config
         EXPRESSIONABLE_MAKE_PARENTHESES_NODE make_parentheses_node;
         EXPRESSIONABLE_MAKE_UNARY_NODE make_unary_node;
         EXPRESSIONABLE_MAKE_UNARY_INDIRECTION_NODE make_unary_indirection_node;
-        EXPRESSIONABLE_MAKE_TENARY_NODE make_tenary_node;
+        EXPRESSIONABLE_MAKE_TENARY_NODE make_ternary_node;
         EXPRESSIONABLE_GET_NODE_TYPE get_node_type;
         EXPRESSIONABLE_GET_LEFT_NODE get_left_node;
         EXPRESSIONABLE_GET_RIGHT_NODE get_right_node;
