@@ -1719,7 +1719,7 @@ int codegen_set_flag_for_operator(const char *op)
     }
     else if (S_EQ(op, "%"))
     {
-        flag |= EXPRESSION_IS_MODULAS;
+        flag |= EXPRESSION_IS_MODULUS;
     }
     else if (S_EQ(op, ">"))
     {
@@ -1851,7 +1851,7 @@ void codegen_gen_math_for_value(const char *reg, const char *value, int flags, b
             asm_push("div ecx");
         }
     }
-    else if (flags & EXPRESSION_IS_MODULAS)
+    else if (flags & EXPRESSION_IS_MODULUS)
     {
         asm_push("mov ecx, %s", value);
         asm_push("cdq");
