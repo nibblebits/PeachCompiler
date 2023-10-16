@@ -465,7 +465,7 @@ bool preprocessor_is_preprocessor_keyword(const char *value)
            S_EQ(value, "warning") ||
            S_EQ(value, "error") ||
            S_EQ(value, "if") ||
-           S_EQ(value, "eleif") ||
+           S_EQ(value, "elif") ||
            S_EQ(value, "ifdef") ||
            S_EQ(value, "ifndef") ||
            S_EQ(value, "endif") ||
