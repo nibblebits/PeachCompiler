@@ -115,8 +115,8 @@ struct token
         int type;
     } num;
 
-    // True if their is whitespace between the token and the next token
-    // i.e * a for operator token * would mean whitespace would be set for token "a"
+    // True if there is whitespace between the token and the next token
+    // e.g. * a for operator token * would mean whitespace would be set for token "a"
     bool whitespace;
 
     // (5+10+20)

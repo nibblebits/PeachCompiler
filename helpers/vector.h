@@ -54,7 +54,7 @@ void vector_unset_flag(struct vector* vector, int flag);
 void vector_pop_last_peek(struct vector* vector);
 
 /**
- * Peeks into the vector of pointers, returning the pointer value its self
+ * Peeks into the vector of pointers, returning the pointer value itsself
  * 
  * Use this function instead of vector_peek if this is a vector of pointers
  */

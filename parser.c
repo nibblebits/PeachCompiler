@@ -894,7 +894,7 @@ void parser_ignore_int(struct datatype *dtype)
 
     if (!parser_is_int_valid_after_datatype(dtype))
     {
-        compiler_error(current_process, "You provided a secondary \"int\" type however its not supported with this current abbrevation\n");
+        compiler_error(current_process, "You provided a secondary \"int\" type however it's not supported with this current abbrevation\n");
     }
 
     // Ignore the "int" token

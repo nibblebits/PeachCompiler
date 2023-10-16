@@ -621,7 +621,7 @@ void preprocessor_definition_remove(struct preprocessor *preprocessor, const cha
 }
 struct preprocessor_definition *preprocessor_definition_create(const char *name, struct vector *value_vec, struct vector *arguments, struct preprocessor *preprocessor)
 {
-    // Unset the definition if its already created
+    // Unset the definition if it's already created
     preprocessor_definition_remove(preprocessor, name);
 
     struct preprocessor_definition *definition = calloc(1, sizeof(struct preprocessor_definition));
@@ -880,7 +880,7 @@ struct token *preprocessor_hashtag_and_identifier(struct compile_process *compil
 }
 
 /**
- * @brief Return true if their is a hastag and any type of preprocessor if statement
+ * @brief Return true if there is a hastag and any type of preprocessor if statement
  * elif is not included.
  *
  * @param compiler
@@ -1237,7 +1237,7 @@ int preprocessor_macro_function_push_something_definition(struct compile_process
         return 0;
     }
 
-    // We failed so theirs no argument
+    // We failed so there's no argument
     struct preprocessor_definition *arg_definition = preprocessor_get_definition(compiler->preprocessor, arg_name);
     if (arg_definition)
     {
