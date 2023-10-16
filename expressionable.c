@@ -378,12 +378,12 @@ void expressionable_parse_for_operator(struct expressionable *expressionable)
     expressionable_node_push(expressionable, exp_node);
 }
 
-void expressionable_parse_tenary(struct expressionable* expressionable)
+void expressionable_parse_ternary(struct expressionable* expressionable)
 {
     void* condition_operand = expressionable_node_pop(expressionable);
     expressionable_expect_op(expressionable, "?");
 
-    // Parse the TRUE part of the tenary
+    // Parse the TRUE part of the ternary
     expressionable_parse(expressionable);
     void* true_result_node = expressionable_node_pop(expressionable);
     expressionable_expect_sym(expressionable, ':');
@@ -392,10 +392,10 @@ void expressionable_parse_tenary(struct expressionable* expressionable)
     expressionable_parse(expressionable);
     void* false_result_node = expressionable_node_pop(expressionable);
 
-    expressionable_callbacks(expressionable)->make_tenary_node(expressionable, true_result_node, false_result_node);
+    expressionable_callbacks(expressionable)->make_ternary_node(expressionable, true_result_node, false_result_node);
 
-    void* tenary_node = expressionable_node_pop(expressionable);
-    expressionable_callbacks(expressionable)->make_expression_node(expressionable, condition_operand, tenary_node, "?");
+    void* ternary_node = expressionable_node_pop(expressionable);
+    expressionable_callbacks(expressionable)->make_expression_node(expressionable, condition_operand, ternary_node, "?");
 }
 
 int expressionable_parse_exp(struct expressionable *expressionable, struct token *token)
@@ -406,7 +406,7 @@ int expressionable_parse_exp(struct expressionable *expressionable, struct token
     }
     else if(S_EQ(expressionable_peek_next(expressionable)->sval, "?"))
     {
-        expressionable_parse_tenary(expressionable);
+        expressionable_parse_ternary(expressionable);
     }
     else
     {

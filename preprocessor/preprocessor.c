@@ -85,11 +85,11 @@ struct preprocessor_node
             struct preprocessor_node *right;
         } joined;
 
-        struct preprocessor_tenary_node
+        struct preprocessor_ternary_node
         {
             struct preprocessor_node *true_node;
             struct preprocessor_node *false_node;
-        } tenary;
+        } ternary;
     };
 
     const char *sval;
@@ -340,12 +340,12 @@ void preprocessor_make_parentheses_node(struct expressionable *expressionable, v
     parentheses_node.parenthesis.exp = node_ptr;
     expressionable_node_push(expressionable, preprocessor_node_create(&parentheses_node));
 }
-void preprocessor_make_tenary_node(struct expressionable *expressionable, void *true_result_node_ptr, void *false_result_node_ptr)
+void preprocessor_make_ternary_node(struct expressionable *expressionable, void *true_result_node_ptr, void *false_result_node_ptr)
 {
     struct preprocessor_node *true_result_node = true_result_node_ptr;
     struct preprocessor_node *false_result_node = false_result_node_ptr;
 
-    expressionable_node_push(expressionable, preprocessor_node_create(&(struct preprocessor_node){.type = PREPROCESSOR_TENARY_NODE, .tenary.true_node = true_result_node, .tenary.false_node = false_result_node}));
+    expressionable_node_push(expressionable, preprocessor_node_create(&(struct preprocessor_node){.type = PREPROCESSOR_TENARY_NODE, .ternary.true_node = true_result_node, .ternary.false_node = false_result_node}));
 }
 
 int preprocessor_get_node_type(struct expressionable *expressionable, void *node)
@@ -444,7 +444,7 @@ struct expressionable_config preprocessor_expressionable_config =
         .callbacks.make_unary_node = preprocessor_make_unary_node,
         .callbacks.make_expression_node = preprocessor_make_expression_node,
         .callbacks.make_parentheses_node = preprocessor_make_parentheses_node,
-        .callbacks.make_tenary_node = preprocessor_make_tenary_node,
+        .callbacks.make_ternary_node = preprocessor_make_ternary_node,
         .callbacks.get_node_type = preprocessor_get_node_type,
         .callbacks.get_left_node = preprocessor_get_left_node,
         .callbacks.get_right_node = preprocessor_get_right_node,
@@ -1413,11 +1413,11 @@ int preprocessor_evaluate_exp(struct compile_process *compiler, struct preproces
     {
         if (left_operand)
         {
-            return preprocessor_evaluate(compiler, node->exp.right->tenary.true_node);
+            return preprocessor_evaluate(compiler, node->exp.right->ternary.true_node);
         }
         else
         {
-            return preprocessor_evaluate(compiler, node->exp.right->tenary.false_node);
+            return preprocessor_evaluate(compiler, node->exp.right->ternary.false_node);
         }
     }
 
