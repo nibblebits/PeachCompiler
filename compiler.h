@@ -232,7 +232,7 @@ struct code_generator
         } current;
 
         // Vector of generatr_switch_stmt_entity
-        struct vector* swtiches;
+        struct vector* switches;
     } _switch;
 
     // A vector of struct string_table_element*
