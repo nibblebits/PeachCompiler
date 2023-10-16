@@ -421,7 +421,7 @@ struct code_generator *codegenerator_new(struct compile_process *process)
     generator->entry_points = vector_create(sizeof(struct codegen_entry_point *));
     generator->exit_points = vector_create(sizeof(struct codegen_exit_point *));
     generator->responses = vector_create(sizeof(struct response *));
-    generator->_switch.swtiches = vector_create(sizeof(struct generator_switch_stmt_entity));
+    generator->_switch.switches = vector_create(sizeof(struct generator_switch_stmt_entity));
     generator->custom_data_section = vector_create(sizeof(const char*));
     return generator;
 }
@@ -529,7 +529,7 @@ void codegen_begin_switch_statement()
 {
     struct code_generator *generator = current_process->generator;
     struct generator_switch_stmt *switch_stmt_data = &generator->_switch;
-    vector_push(switch_stmt_data->swtiches, &switch_stmt_data->current);
+    vector_push(switch_stmt_data->switches, &switch_stmt_data->current);
     memset(&switch_stmt_data->current, 0, sizeof(struct generator_switch_stmt_entity));
     int switch_stmt_id = codegen_label_count();
     asm_push(".switch_stmt_%i:", switch_stmt_id);
@@ -542,8 +542,8 @@ void codegen_end_switch_statement()
     struct generator_switch_stmt *switch_stmt_data = &generator->_switch;
     asm_push(".switch_stmt_%i_end:", switch_stmt_data->current.id);
     // Lets restore the older switch statement
-    memcpy(&switch_stmt_data->current, vector_back(switch_stmt_data->swtiches), sizeof(struct generator_switch_stmt_entity));
-    vector_pop(switch_stmt_data->swtiches);
+    memcpy(&switch_stmt_data->current, vector_back(switch_stmt_data->switches), sizeof(struct generator_switch_stmt_entity));
+    vector_pop(switch_stmt_data->switches);
 }
 
 int codegen_switch_id()
@@ -1719,7 +1719,7 @@ int codegen_set_flag_for_operator(const char *op)
     }
     else if (S_EQ(op, "%"))
     {
-        flag |= EXPRESSION_IS_MODULAS;
+        flag |= EXPRESSION_IS_MODULUS;
     }
     else if (S_EQ(op, ">"))
     {
@@ -1851,7 +1851,7 @@ void codegen_gen_math_for_value(const char *reg, const char *value, int flags, b
             asm_push("div ecx");
         }
     }
-    else if (flags & EXPRESSION_IS_MODULAS)
+    else if (flags & EXPRESSION_IS_MODULUS)
     {
         asm_push("mov ecx, %s", value);
         asm_push("cdq");
