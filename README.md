@@ -14,6 +14,7 @@ Ever wondered how to build a C compiler from scratch? This course teaches you ju
     - [Module 2](#module-2)
     - [Module 3](#module-3)
     - [Module 4](#module-4)
+    - [Module 5](#module-5)
 3. [Requirements](#requirements)
 4. [Who This Course is For](#who-this-course-is-for)
 5. [What You Will Learn](#what-you-will-learn)
@@ -39,15 +40,15 @@ Moreover, we'll also dive deep into the preprocessor system, allowing you to inc
 
 In the first module, you'll learn how to load a C source file into memory. We'll build a lexer to perform lexical analysis and convert the source code into tokens. These tokens will then be passed through a parser to produce an Abstract Syntax Tree (AST).
 
-### Module 2
+### Module 2 & 3 
 
 In the second module, you'll learn how to create a code generator that outputs 32-bit Intel assembly language. This assembly code can then be compiled to produce a binary executable. This module also introduces the concept of a resolver system to simplify complex expressions.
 
-### Module 3
+### Module 4
 
 Module three focuses on creating a preprocessor and macro system. This will enable you to include header files in your C programs and utilize macro keywords like `#define`, `#ifdef`, `sizeof`, etc.
 
-### Module 4
+### Module 5
 
 In the final module, we'll build a semantic validator. This will ensure that the code adheres to the rules of C language, like variable declaration and structure access.
 
